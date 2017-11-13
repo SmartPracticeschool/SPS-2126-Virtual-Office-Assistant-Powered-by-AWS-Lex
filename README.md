@@ -1,2 +1,5 @@
-# Amazon-Pollexy
-Amazon Polly and Lex-based special needs voice assistant
+Amazon Pollexy
+
+## License
+
+This library is licensed under the Amazon Software License.
