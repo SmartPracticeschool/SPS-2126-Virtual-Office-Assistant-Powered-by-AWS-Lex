@@ -19,12 +19,10 @@ from cache.cache_manager import CacheManager
 from person.person import PersonManager
 from face.face import FaceManager
 from locator.locator import LocationManager, LocationVerification
-from gpiozero import MotionSensor
 from helpers.config import ConfigHelper
 import random
 import arrow
 import logging
-import time
 import traceback
 import os
 import sys
@@ -450,31 +448,6 @@ def update_location_activity(obj):
         lm = LocationManager()
         response = lm.update_location_activity(location_name)
         print response
-    except Exception as exc:
-        click.echo("Error: %s" % str(exc))
-        exit(2)
-
-
-@cli.command()
-@click.pass_obj
-def monitor_motion(obj):
-    try:
-        error_if_missing(obj, 'location_name')
-        location_name = obj.location_name
-        pir = MotionSensor(4)
-        i = 0
-
-        while True:
-            t_end = time.time() + 15
-            while time.time() < t_end:
-                if pir.motion_detected:
-                    i = i + 1
-            if i > 100000:
-                location_name = obj.location_name
-                lm = LocationManager()
-                lm.update_location_activity(location_name)
-                print "Updating activity for " + location_name
-            i = 0
     except Exception as exc:
         click.echo("Error: %s" % str(exc))
         exit(2)
