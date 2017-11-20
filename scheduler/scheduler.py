@@ -42,7 +42,7 @@ class Scheduler(object):
 
     def schedule_message(self, scheduled_message):
         datetime_in_utc = datetime.utcnow().isoformat()
-        ical = scheduled_message.ical
+        ical = scheduled_message.to_ical()
         body = scheduled_message.body
         person_name = scheduled_message.person_name
         end_datetime_in_utc = \

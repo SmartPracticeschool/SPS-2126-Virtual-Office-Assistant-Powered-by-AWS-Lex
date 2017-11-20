@@ -319,6 +319,7 @@ def queue(simulate, simulated_date):
 @click.option('--ical')
 @click.option('--start_datetime')
 @click.option('--frequency')
+@click.option('--interval')
 @click.option('--count')
 @click.option('--lexbot')
 @click.option('--timezone')
@@ -329,6 +330,7 @@ def message_schedule(person_name,
                      count,
                      frequency,
                      lexbot,
+                     interval,
                      timezone,
                      start_datetime):
     try:
@@ -356,6 +358,7 @@ def message_schedule(person_name,
             Count=count,
             Lexbot=lexbot,
             TimeZone=timezone,
+            Interval=interval,
             EndDateTimeInUtc=expiration_datetime)
         scheduler.schedule_message(message)
 

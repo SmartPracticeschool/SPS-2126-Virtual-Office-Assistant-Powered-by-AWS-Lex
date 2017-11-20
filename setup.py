@@ -5,7 +5,7 @@ with open('requirements.txt') as f:
 
 setup(
         name='Amazon Pollexy Client',
-        version='1.4.0',
+        version='1.4.1',
         packages=['cli', 'input', 'scheduler', 'helpers', 'face', 'cache',
                   'speaker', 'tests', 'time_window', 'lambda_functions',
                   'locator', 'person', 'messages'],

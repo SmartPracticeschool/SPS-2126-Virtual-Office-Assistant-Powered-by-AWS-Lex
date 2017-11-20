@@ -31,11 +31,13 @@ class ScheduledMessage(object):
         self.is_queued = kwargs.pop("IsQueued", False)
         self.last_loc = kwargs.pop("LastLocationIndex", False)
         self.expired = kwargs.pop("IsExpired", False)
+        self.compare_datetime_in_utc = kwargs.pop("CompareDateTimeInUtc", "")
         self.last_occurrence_in_utc = kwargs.pop("LastOccurrenceInUtc",
                                                  None)
         self.no_more_occurrences = str(self.next_occurrence_utc) == 'N/A'
         self.frequency = kwargs.pop("Frequency", "")
         self.count = kwargs.pop("Count", "")
+        self.interval = kwargs.pop("Interval", "")
         self.lexbot = kwargs.pop("Lexbot", "")
         if (self.last_occurrence_in_utc):
             check_if_timezone_naive(self.last_occurrence_in_utc,
@@ -56,11 +58,18 @@ class ScheduledMessage(object):
             return self.ical
         else:
             ev = Event()
+            rrule = {}
             ev.add('dtstart', self.start_datetime_in_utc.datetime)
             if self.end_datetime_in_utc:
                 ev.add('dtend', self.end_datetime_in_utc.datetime)
+            if self.count:
+                rrule['count'] = self.count
+            if self.interval:
+                rrule['interval'] = self.interval
             if self.frequency:
-                ev.add('rrule', {'freq': '{}'.format(self.frequency)})
+                rrule['freq'] = self.frequency
+            if rrule:
+                ev.add('rrule', rrule)
             print ev.to_ical()
             return ev.to_ical()
 
@@ -143,10 +152,11 @@ class ScheduledMessage(object):
         else:
             start = self.start_datetime_in_utc.datetime
             rule = rrulestr(self.ical, dtstart=start)
-            next_after_now = rule.after(arrow.utcnow())
+            next_after_now = rule.after(self.compare_datetime_in_utc or
+                                        arrow.utcnow())
             if not next_after_now:
                 logging.info('No next_after_now, so next_occur=N/A')
-                return 'N/A', arrow.utcnow()
+                return 'N/A', self.compare_datetime_in_utc or arrow.utcnow()
             next_before_now = rule.before(next_after_now)
             if (self.last_occurrence_in_utc > next_before_now):
                 next_occur = next_after_now
@@ -159,6 +169,7 @@ class ScheduledMessage(object):
             return 'N/A', arrow.utcnow().replace(minutes=+10)
         if (expires > self.end_datetime_in_utc):
             expires = self.end_datetime_in_utc
+        print 'Next = ' + str(arrow.get(next_occur))
         return arrow.get(next_occur), arrow.get(expires)
 
     def is_message_ready(self, **kwargs):
@@ -168,12 +179,15 @@ class ScheduledMessage(object):
         next_occur, expires = self.next_occurrence()
         if next_occur == 'N/A':
             return True
-        compare_datetime = kwargs.get("CompareDateTimeInUtc", arrow.utcnow())
+        compare_datetime = self.compare_datetime_in_utc or arrow.utcnow()
+        print 'Compare: {}'.format(compare_datetime)
+        print 'Next: {}', next_occur
+        print next_occur <= compare_datetime
         if next_occur <= compare_datetime and \
-            not self.end_datetime_in_utc or \
-            (self.end_datetime_in_utc and
-             self.end_datetime_in_utc > next_occur):
-                return True
+            (not self.end_datetime_in_utc or
+                (self.end_datetime_in_utc and
+                 self.end_datetime_in_utc > next_occur)):
+                    return True
         else:
             return False
 

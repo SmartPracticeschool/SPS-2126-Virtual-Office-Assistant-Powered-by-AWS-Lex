@@ -87,7 +87,7 @@ def test_inserting_recurring_schedule_sets_message(good_scheduled_message):
 def test_adding_blank_messages_throws_error():
     with pytest.raises(ValueError) as exception:
         ScheduledMessage(
-            StartDateTimeInUtc=datetime.datetime.utcnow(),
+            StartDateTimeInUtc=arrow.utcnow(),
             ical="FREQ=DAILY",
             Body="",
             PersonName="Testperson",
@@ -100,7 +100,7 @@ def test_adding_blank_messages_throws_error():
 def test_adding_message_expiring_before_today_throws_error():
     with pytest.raises(ValueError) as exception:
         ScheduledMessage(
-            StartDateTimeInUtc=datetime.datetime.utcnow(),
+            StartDateTimeInUtc=arrow.utcnow(),
             ical="FREQ=DAILY",
             Body="Test Message Body",
             PersonName="Testperson",
@@ -154,8 +154,9 @@ def test_next_occurrence_after_compare_date_not_ready():
         ical="RRULE:FREQ=HOURLY;INTERVAL=2",
         Body="Test Message Body",
         PersonName="Testperson",
+        CompareDateTimeInUtc=compare_date,
         EndDateTimeInUtc=arrow.utcnow().replace(days=10))
-    assert not m.is_message_ready(CompareDateTimeInUtc=compare_date)
+    assert not m.is_message_ready()
 
 
 @mock_dynamodb2
@@ -334,48 +335,6 @@ def test_ignore_expired_messages(good_scheduled_message):
 
 
 @mock_dynamodb2
-def test_start_datetime_in_utc_with_no_tz_throws_error(good_scheduled_message):
-    with pytest.raises(ValueError) as exception:
-        ScheduledMessage(
-            StartDateTimeInUtc=arrow.utcnow().naive,
-            LastOccurrenceInUtc=arrow.utcnow(),
-            ical="RRULE:FREQ=HOURLY;INTERVAL=2",
-            Body="Test Message Body",
-            PersonName="Testperson",
-            EndDateTimeInUtc=arrow.utcnow().replace(days=10))
-    assert 'datetime start_datetime_in_utc has no timezone' in \
-        str(exception)
-
-
-@mock_dynamodb2
-def test_last_datetime_in_utc_with_no_tz_throws_error(good_scheduled_message):
-    with pytest.raises(ValueError) as exception:
-        ScheduledMessage(
-            StartDateTimeInUtc=arrow.utcnow(),
-            LastOccurrenceInUtc=arrow.utcnow().naive,
-            ical="RRULE:FREQ=HOURLY;INTERVAL=2",
-            Body="Test Message Body",
-            PersonName="Testperson",
-            EndDateTimeInUtc=arrow.utcnow().replace(days=10))
-    assert 'datetime last_occurrence_in_utc has no timezone' in \
-        str(exception)
-
-
-@mock_dynamodb2
-def test_end_datetime_in_utc_with_no_tz_throws_error(good_scheduled_message):
-    with pytest.raises(ValueError) as exception:
-        ScheduledMessage(
-            StartDateTimeInUtc=arrow.utcnow(),
-            LastOccurrenceInUtc=arrow.utcnow(),
-            ical="RRULE:FREQ=HOURLY;INTERVAL=2",
-            Body="Test Message Body",
-            PersonName="Testperson",
-            EndDateTimeInUtc=arrow.utcnow().replace(days=10).naive)
-    assert 'datetime end_datetime_in_utc has no timezone' in \
-        str(exception)
-
-
-@mock_dynamodb2
 def test_first_occurrence_is_start_date():
     start_date = arrow.get('2012-01-01 01:01:00 UTC')
     m = ScheduledMessage(
@@ -455,8 +414,48 @@ def test_passing_enddate_adds_to_ical():
     m = ScheduledMessage(
             StartDateTimeInUtc=start_date,
             EndDateTimeInUtc=end_date,
-
             Body="Test",
             Frequency='HOURLY',
+            PersonName="test")
+    assert ical == m.to_ical()
+
+
+@mock_dynamodb2
+def test_passing_count_adds_to_ical():
+    start_date = arrow.get('2012-01-01 01:01:00 UTC')
+    end_date = start_date.replace(days=5)
+    ical = 'BEGIN:VEVENT\r\n' + \
+        'DTSTART;VALUE=DATE-TIME:20120101T010100Z\r\n' + \
+        'DTEND;VALUE=DATE-TIME:20120106T010100Z\r\n' + \
+        'RRULE:FREQ=HOURLY;COUNT=10\r\n' + \
+        'END:VEVENT\r\n'
+
+    m = ScheduledMessage(
+            StartDateTimeInUtc=start_date,
+            EndDateTimeInUtc=end_date,
+            Count=10,
+            Body="Test",
+            Frequency='HOURLY',
+            PersonName="test")
+    assert ical == m.to_ical()
+
+
+@mock_dynamodb2
+def test_passing_interval_adds_to_ical():
+    start_date = arrow.get('2012-01-01 01:01:00 UTC')
+    end_date = start_date.replace(days=5)
+    ical = 'BEGIN:VEVENT\r\n' + \
+        'DTSTART;VALUE=DATE-TIME:20120101T010100Z\r\n' + \
+        'DTEND;VALUE=DATE-TIME:20120106T010100Z\r\n' + \
+        'RRULE:FREQ=HOURLY;COUNT=10;INTERVAL=5\r\n' + \
+        'END:VEVENT\r\n'
+
+    m = ScheduledMessage(
+            StartDateTimeInUtc=start_date,
+            EndDateTimeInUtc=end_date,
+            Count=10,
+            Body="Test",
+            Frequency='HOURLY',
+            Interval=5,
             PersonName="test")
     assert ical == m.to_ical()
