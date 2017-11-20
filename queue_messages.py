@@ -37,12 +37,14 @@ def handler(event, context):
         logging.info('# of locations avail: {}, last_loc={}'
                      .format(p.all_available_count(dt),
                              m.last_loc))
-        if m.last_loc == p.all_available_count(dt)-1:
+        if p.all_available_count(dt) > 1 and \
+                m.last_loc == p.all_available_count(dt)-1:
             logging.info('Resetting to first location')
             idx = 0
         else:
-            logging.info('Moving to next location')
-            idx = m.last_loc + 1
+            if p.all_available_count(dt) > 1:
+                logging.info('Moving to next location')
+                idx = m.last_loc + 1
 
             active_window = avail_windows[int(idx)]
             next_exp = m.next_expiration_utc.isoformat()
