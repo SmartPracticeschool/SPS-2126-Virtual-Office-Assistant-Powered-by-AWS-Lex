@@ -1,4 +1,4 @@
-# Amazon Pollexy
+# Amazon Pollexy BETA
 Special needs virtual assistant
 
 ## Prerequisites
@@ -6,7 +6,7 @@ Special needs virtual assistant
 * 8GB or larger SD card 
 
 ## Step 1: QuickStart Your Pi in Five Easy Steps
-1. Download the [latest](https://s3.amazonaws.com/pollexy-public/images/pi_v15.zip) Pollexy image.
+1. Download the [latest](https://s3.amazonaws.com/pollexy-public/images/pi_v17.zip) Pollexy image.
 2. Download and install [Etcher](https://etcher.io/).
 3. Use Etcher to burn the image to the SD card.
 4. After the image is burned, go to the root of the SD card and copy `settings.set.EXAMPLE` to `settings.set`.
@@ -125,7 +125,8 @@ Your IP address and login information is located here:
 
 1. Login to the pi.
 2. After you login, run this command to configure AWS security:
-    pollexy credentials configure ACCESS_KEY SECRET_KEY REGION
+
+        $ pollexy credentials configure ACCESS_KEY SECRET_KEY REGION
 
 ## Step 5: Create the Environment
 *To keep it simple, `Amazon Pollexy` wraps the necessary terraform commands so that it uses the right profile.*
