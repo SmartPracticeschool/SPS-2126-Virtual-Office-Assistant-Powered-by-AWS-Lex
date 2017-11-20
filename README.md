@@ -126,7 +126,7 @@ Your IP address and login information is located here:
 1. Login to the pi.
 2. Go to `/root/pollexy` and run this command to update to the latest version:
 
-        $ ./update.sjh
+        $ ./update.sh
         
 3. After you login, run this command to configure AWS security:
 
