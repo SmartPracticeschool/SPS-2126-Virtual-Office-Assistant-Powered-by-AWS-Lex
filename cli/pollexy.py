@@ -336,18 +336,17 @@ def message_schedule(person_name,
     try:
         click.echo("Scheduling message for person {}".format(person_name))
         scheduler = Scheduler()
-        start_datetime = arrow.utcnow()
         if start_datetime is None:
             click.echo("Setting start time to now")
+            start_datetime = arrow.utcnow()
         else:
             start_datetime = arrow.get(start_datetime)
             click.echo("Setting custom start time to %s" % start_datetime)
 
-        if ical is None:
-            ical = 'FREQ=DAILY;COUNT=1'
-
         if expiration_datetime is None:
-            expiration_datetime = start_datetime.replace(hours=1)
+            expiration_datetime = start_datetime.replace(years=1000)
+        else:
+            expiration_datetime = arrow.get(expiration_datetime)
 
         message = ScheduledMessage(
             StartDateTimeInUtc=start_datetime,
