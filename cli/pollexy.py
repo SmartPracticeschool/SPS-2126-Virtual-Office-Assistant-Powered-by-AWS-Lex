@@ -26,6 +26,7 @@ import logging
 import traceback
 import os
 import sys
+import json
 from ConfigParser import SafeConfigParser
 from python_terraform import Terraform
 
@@ -123,7 +124,8 @@ def person_list():
             click.echo('{} (req_phys={})'
                        .format(p.name,
                                p.require_physical_confirmation))
-
+            for tw in json.loads(p.time_windows.to_json()):
+                print '--{}\n{}'.format(tw['location_name'], tw['ical'])
 
 @person.command('show')
 @click.argument('name')

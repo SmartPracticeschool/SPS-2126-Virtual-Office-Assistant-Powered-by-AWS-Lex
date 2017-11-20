@@ -6,7 +6,7 @@
 #    http://aws.amazon.com/asl/
 # or in the "license" file accompanying this file. This file is distributed
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, expressi
-# or implied. See the License for the specific language governing permissions 
+# or implied. See the License for the specific language governing permissions
 # and limitations under the License.
 
 import boto3
@@ -46,7 +46,6 @@ class Person(object):
                                    ical=w['ICal'],
                                    Priority=w['Priority'],
                                    IsMuted=w['IsMuted'])
-            print 'adding window'
             self.add_window(ptw)
 
     def add_window(self, w):
@@ -110,7 +109,6 @@ class PersonManager(object):
             p.is_muted = db_person['is_muted']
 
         if 'windows' in db_person.keys():
-            print db_person['windows']
             for w in json.loads(db_person['windows']):
                 tw = PersonTimeWindow(IsMuted=w["is_muted"],
                                       ical=w['ical'],
@@ -131,7 +129,6 @@ class PersonManager(object):
         upd_expr = ""
         if windows:
             expr.append('windows=:windows')
-            print json.dumps(windows)
             attr[':windows'] = json.dumps(yaml.load(windows))
 
         if req_phys_conf is not None:
