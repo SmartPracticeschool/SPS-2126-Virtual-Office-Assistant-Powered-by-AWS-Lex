@@ -127,6 +127,7 @@ def person_list():
             for tw in json.loads(p.time_windows.to_json()):
                 print '--{}\n{}'.format(tw['location_name'], tw['ical'])
 
+
 @person.command('show')
 @click.argument('name')
 def person_show(name):
@@ -317,10 +318,18 @@ def queue(simulate, simulated_date):
 @click.option('--expiration_datetime')
 @click.option('--ical')
 @click.option('--start_datetime')
+@click.option('--frequency')
+@click.option('--count')
+@click.option('--lexbot')
+@click.option('--timezone')
 def message_schedule(person_name,
                      message,
                      expiration_datetime,
                      ical,
+                     count,
+                     frequency,
+                     lexbot,
+                     timezone,
                      start_datetime):
     try:
         click.echo("Scheduling message for person {}".format(person_name))
@@ -343,6 +352,10 @@ def message_schedule(person_name,
             ical=ical,
             Body=message,
             PersonName=person_name,
+            Frequency=frequency,
+            Count=count,
+            Lexbot=lexbot,
+            TimeZone=timezone,
             EndDateTimeInUtc=expiration_datetime)
         scheduler.schedule_message(message)
 

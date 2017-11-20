@@ -6,7 +6,7 @@
 #    http://aws.amazon.com/asl/
 # or in the "license" file accompanying this file. This file is distributed
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, expressi
-# or implied. See the License for the specific language governing permissions 
+# or implied. See the License for the specific language governing permissions
 # and limitations under the License.
 
 """
@@ -16,6 +16,7 @@ import uuid
 import arrow
 from dateutil.rrule import rrulestr
 from helpers.datetime_helpers import check_if_timezone_naive
+from icalendar import Event
 import logging
 
 
@@ -33,18 +34,35 @@ class ScheduledMessage(object):
         self.last_occurrence_in_utc = kwargs.pop("LastOccurrenceInUtc",
                                                  None)
         self.no_more_occurrences = str(self.next_occurrence_utc) == 'N/A'
+        self.frequency = kwargs.pop("Frequency", "")
+        self.count = kwargs.pop("Count", "")
+        self.lexbot = kwargs.pop("Lexbot", "")
         if (self.last_occurrence_in_utc):
             check_if_timezone_naive(self.last_occurrence_in_utc,
                                     "last_occurrence_in_utc")
         check_if_timezone_naive(self.start_datetime_in_utc,
                                 "start_datetime_in_utc")
-        check_if_timezone_naive(self.end_datetime_in_utc,
-                                "end_datetime_in_utc")
+        if self.end_datetime_in_utc:
+            check_if_timezone_naive(self.end_datetime_in_utc,
+                                    "end_datetime_in_utc")
+            if self.start_datetime_in_utc > self.end_datetime_in_utc:
+                raise ValueError("Start datetime is after end datetime")
         if (not self.body):
             raise ValueError("Message body is empty")
-        if self.start_datetime_in_utc > self.end_datetime_in_utc:
-            raise ValueError("Start datetime is after end datetime")
         logging.debug(self.__str__())
+
+    def to_ical(self):
+        if self.ical:
+            return self.ical
+        else:
+            ev = Event()
+            ev.add('dtstart', self.start_datetime_in_utc.datetime)
+            if self.end_datetime_in_utc:
+                ev.add('dtend', self.end_datetime_in_utc.datetime)
+            if self.frequency:
+                ev.add('rrule', {'freq': '{}'.format(self.frequency)})
+            print ev.to_ical()
+            return ev.to_ical()
 
     def __str__(self):
         last_occurrence = None
@@ -55,8 +73,8 @@ class ScheduledMessage(object):
             'uuid_key: %s' % self.uuid_key,
             'start_time (UTC): %s' % self.start_datetime_in_utc,
             'start_time (local): %s' % self.start_datetime_in_utc.to('local'),
-            'end_time (UTC): %s' % self.end_datetime_in_utc,
-            'end_time (local): %s' % self.end_datetime_in_utc.to('local'),
+            'end_time (UTC): %s' % self.end_datetime_in_utc or "None",
+            'end_time (local): %s' % self.end_datetime_local or "None",
             'last_occurrence (UTC): %s' % (last_occurrence or
                                            self.last_occurrence_in_utc),
             'last_occurrence (local): %s' % (last_occurrence or
@@ -73,6 +91,13 @@ class ScheduledMessage(object):
             'is_queued: %s' % self.is_queued,
             'body: %s' % self.body
         ])
+
+    @property
+    def end_datetime_local(self):
+        if self.end_datetime_in_utc:
+            return self.end_datetime_in_utc.to('local')
+        else:
+            return None
 
     @property
     def next_occurrence_utc(self):
@@ -98,6 +123,8 @@ class ScheduledMessage(object):
 
     @property
     def is_expired(self):
+        if not self.end_datetime_in_utc:
+            return False
         if self.no_more_occurrences:
             return False
         if (self.next_occurrence_utc > self.end_datetime_in_utc) or \
@@ -143,8 +170,10 @@ class ScheduledMessage(object):
             return True
         compare_datetime = kwargs.get("CompareDateTimeInUtc", arrow.utcnow())
         if next_occur <= compare_datetime and \
-           self.end_datetime_in_utc > next_occur:
-            return True
+            not self.end_datetime_in_utc or \
+            (self.end_datetime_in_utc and
+             self.end_datetime_in_utc > next_occur):
+                return True
         else:
             return False
 

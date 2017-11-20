@@ -6,7 +6,7 @@
 #    http://aws.amazon.com/asl/
 # or in the "license" file accompanying this file. This file is distributed
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, expressi
-# or implied. See the License for the specific language governing permissions 
+# or implied. See the License for the specific language governing permissions
 # and limitations under the License.
 
 from moto import mock_dynamodb2
@@ -410,3 +410,53 @@ def test_endtime_before_expiration_becomes_expiration():
             PersonName="Testperson",
             EndDateTimeInUtc=end_date)
     assert m.next_expiration_utc == end_date
+
+
+@mock_dynamodb2
+def test_passing_startdate_adds_to_ical():
+    start_date = arrow.get('2012-01-01 01:01:00 UTC')
+    ical = 'BEGIN:VEVENT\r\n' + \
+        'DTSTART;VALUE=DATE-TIME:20120101T010100Z\r\n' + \
+        'END:VEVENT\r\n'
+
+    m = ScheduledMessage(
+            StartDateTimeInUtc=start_date,
+            Body="Test",
+            PersonName="test")
+    assert ical == m.to_ical()
+
+
+@mock_dynamodb2
+def test_passing_frequency_adds_to_ical():
+    start_date = arrow.get('2012-01-01 01:01:00 UTC')
+    ical = 'BEGIN:VEVENT\r\n' + \
+        'DTSTART;VALUE=DATE-TIME:20120101T010100Z\r\n' + \
+        'RRULE:FREQ=HOURLY\r\n' + \
+        'END:VEVENT\r\n'
+
+    m = ScheduledMessage(
+            StartDateTimeInUtc=start_date,
+            Body="Test",
+            Frequency='HOURLY',
+            PersonName="test")
+    assert ical == m.to_ical()
+
+
+@mock_dynamodb2
+def test_passing_enddate_adds_to_ical():
+    start_date = arrow.get('2012-01-01 01:01:00 UTC')
+    end_date = start_date.replace(days=5)
+    ical = 'BEGIN:VEVENT\r\n' + \
+        'DTSTART;VALUE=DATE-TIME:20120101T010100Z\r\n' + \
+        'DTEND;VALUE=DATE-TIME:20120106T010100Z\r\n' + \
+        'RRULE:FREQ=HOURLY\r\n' + \
+        'END:VEVENT\r\n'
+
+    m = ScheduledMessage(
+            StartDateTimeInUtc=start_date,
+            EndDateTimeInUtc=end_date,
+
+            Body="Test",
+            Frequency='HOURLY',
+            PersonName="test")
+    assert ical == m.to_ical()
