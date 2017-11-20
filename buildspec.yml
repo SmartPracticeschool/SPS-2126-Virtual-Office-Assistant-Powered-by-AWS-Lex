@@ -1,0 +1,11 @@
+version: 0.1
+
+phases:
+    install:
+        commands:
+            - apt-get update -y
+
+    pre_build:
+        commands:
+            - pip install -r requirements.txt
+            - tox

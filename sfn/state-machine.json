@@ -1,0 +1,96 @@
+{
+    "Comment":"Axela Message Delivery State Machine",
+    "StartAt":"MessageQueued",
+    "States":{
+        "MessageScheduled":{
+            "Type":"Task",
+            "Resource":"arn:aws:states:us-east-1:225643548030:activity:schedule-message",
+            "Next":"MessageScheduledChoiceState"
+        },
+        "MessageScheduledChoiceState":{
+            "Type":"Choice",
+            "Choices":[
+                {
+                    "Not":{
+                        "Variable":"$.location",
+                        "StringEquals":""
+                    },
+                    "Next":"MessageQueued"
+                }
+            ],
+            "Default":"DefaultState"
+        },
+        "VerifyRecipientChoiceState":{
+            "Type":"Choice",
+            "Choices":[
+                {
+                    "Variable":"$.verified",
+                    "BooleanEquals": true,
+                    "Next":"RecipientVerified"
+                },
+                {
+                    "And":[
+                        {
+                            "Variable":"$.verified",
+                            "BooleanEquals": false
+                        },
+                        {
+                            "Variable":"$.absent",
+                            "BooleanEquals": true
+                        }
+                    ],
+                    "Next":"AbsentRecipient"
+                },
+                {
+                    "And":[
+                        {
+                            "Variable":"$.verified",
+                            "BooleanEquals": false
+                        },
+                        {
+                            "Variable":"$.absent",
+                            "BooleanEquals": false
+                        }
+                    ],
+                    "Next":"RecipientVerificationFailed"
+                }
+            ],
+            "Default":"DefaultState"
+        },
+        "DefaultState":{
+            "Type":"Fail",
+            "Cause":"No Matches!"
+        },
+        "MessageQueued":{
+            "Type":"Task",
+            "Resource":"arn:aws:states:us-east-1:225643548030:activity:queue-message",
+            "Next":"VerifyRecipient"
+        },
+        "VerifyRecipient":{
+            "Type":"Task",
+            "Resource":"arn:aws:states:us-east-1:225643548030:activity:verify-recipient",
+            "Next":"VerifyRecipientChoiceState"
+        },
+        "RecipientVerified":{
+            "Type":"Task",
+            "Resource":"arn:aws:states:us-east-1:225643548030:activity:confirm-recipient-verification",
+            "Next":"SpeakMessage"
+        },
+        "AbsentRecipient":{
+            "Type":"Task",
+            "Resource":"arn:aws:states:us-east-1:225643548030:activity:handle-absent-recipient",
+            "Next":"MessageScheduled"
+        },
+        "RecipientVerificationFailed":{
+            "Type":"Task",
+            "Resource":"arn:aws:states:us-east-1:225643548030:activity:handle-verification-failure",
+            "Next":"MessageScheduled"
+        },
+        "SpeakMessage":{
+            "Type":"Task",
+            "Resource":"arn:aws:states:us-east-1:225643548030:activity:speak-message",
+            "End": true
+        }
+    }
+}
+

@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "ScheduledMessageModel",
+  "type": "object",
+  "properties": {
+    "message": {
+      "type": "object",
+      "properties": {
+        "Start": { "type": "string" },
+        "End": { "type": "string" },
+        "Recurrence": { "type": "string" },
+        "TargetDevice": { "type": "string" },
+        "Message": { "type": "string" }
+        }
+      }
+    }
+}

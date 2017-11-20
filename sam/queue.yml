@@ -1,0 +1,56 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: Pollexy Message Queuer
+Resources:
+  pollexymanageperson:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Description: Pollexy Person Manager
+      Runtime: python2.7
+      Handler: update_person.handler
+      CodeUri: ./
+      Policies:
+        - "AWSConfigRulesExecutionRole"
+        - "AWSLambdaDynamoDBExecutionRole"
+        - "AmazonDynamoDBFullAccess"
+      MemorySize: 128
+      Timeout: 3
+  pollexyschedule:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Description: Pollexy Message Scheduler 
+      Runtime: python2.7
+      Handler: schedule_message.handler
+      CodeUri: ./
+      Policies:
+        - "AWSConfigRulesExecutionRole"
+        - "AWSLambdaDynamoDBExecutionRole"
+        - "AmazonDynamoDBFullAccess"
+      MemorySize: 128
+      Timeout: 3
+  pollexyqueue:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Description: Pollexy Message Queuer
+      Runtime: python2.7
+      Handler: queue_messages.handler
+      CodeUri: ./
+      Policies:
+        - "AWSConfigRulesExecutionRole"
+        - "AWSLambdaDynamoDBExecutionRole"
+        - "AmazonDynamoDBFullAccess"
+      MemorySize: 128
+      Timeout: 3
+  pollexyqueueimmediate:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Description: Pollexy Message Queuer
+      Runtime: python2.7
+      Handler: queue_immediate.handler
+      CodeUri: ./
+      Policies:
+        - "AWSConfigRulesExecutionRole"
+        - "AWSLambdaDynamoDBExecutionRole"
+        - "AmazonDynamoDBFullAccess"
+      MemorySize: 128
+      Timeout: 3

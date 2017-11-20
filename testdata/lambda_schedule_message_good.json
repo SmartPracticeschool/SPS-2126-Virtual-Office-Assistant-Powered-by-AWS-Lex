@@ -1,0 +1,10 @@
+{
+"message": {
+    "Start": "2012-01-01 01:00:00+00:00",
+    "Body":  "This is the message",
+    "DeviceName": "test_device",
+    "End": "2013-01-01 01:00:00+00:00",
+    "Recurrence": "FREQ=DAILY"
+    }
+}
+
