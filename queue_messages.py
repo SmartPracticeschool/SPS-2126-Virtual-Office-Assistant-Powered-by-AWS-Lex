@@ -45,6 +45,8 @@ def handler(event, context):
             if p.all_available_count(dt) > 1:
                 logging.info('Moving to next location')
                 idx = m.last_loc + 1
+            else:
+                idx = 0
 
             active_window = avail_windows[int(idx)]
             next_exp = m.next_expiration_utc.isoformat()
