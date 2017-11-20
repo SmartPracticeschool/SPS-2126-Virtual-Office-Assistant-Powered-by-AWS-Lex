@@ -1,3 +1,4 @@
+#!/usr/bin/python
 # Copyright 2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 #
 # Licensed under the Amazon Software License (the "License"). You may not
@@ -6,10 +7,9 @@
 #    http://aws.amazon.com/asl/
 # or in the "license" file accompanying this file. This file is distributed
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, expressi
-# or implied. See the License for the specific language governing permissions 
+# or implied. See the License for the specific language governing permissions
 # and limitations under the License.
 
-#!/usr/bin/python
 import click
 from messages.message import ScheduledMessage
 from messages.message_manager import MessageManager, LibraryManager
@@ -29,14 +29,12 @@ import traceback
 import os
 import sys
 from ConfigParser import SafeConfigParser
-from python_terraform import *
-import boto3
+from python_terraform import Terraform
 
 logging.basicConfig(level=logging.WARN,
                     format='%(asctime)s - %(levelname)s'
                     '- %(message)s')
-print 'Amazon Pollexy'
-print 'Copyright 2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.\n'
+
 
 class Config():
     def __init__(self):
@@ -57,9 +55,9 @@ def say(**kwargs):
 @click.option('--profile', default='pollexy')
 @click.option('--region')
 def cli(profile, region):
-    os.environ['AWS_PROFILE']=profile
+    os.environ['AWS_PROFILE'] = profile
     if region:
-        os.environ['AWS_DEFAULT_REGION']=region
+        os.environ['AWS_DEFAULT_REGION'] = region
     pass
 
 
@@ -493,9 +491,11 @@ def update_library_message(obj):
     except Exception as exc:
         click.echo("Error: %s" % str(exc))
 
+
 @cli.group('terraform')
 def tf():
     pass
+
 
 @tf.command()
 def plan():
@@ -513,7 +513,7 @@ def plan():
     print stdout
 
     print 'Planning environment . . . '
-    code, stdout, stderr = tf.plan(var={'aws_region':region})
+    code, stdout, stderr = tf.plan(var={'aws_region': region})
     if (stderr):
         print stderr
     else:
@@ -531,11 +531,12 @@ def apply():
         return
     region = parser.get('profile pollexy', 'region')
     print 'Applying environment . . . '
-    code, stdout, stderr = tf.apply(var={'aws_region':region})
+    code, stdout, stderr = tf.apply(var={'aws_region': region})
     if (stderr):
         print stderr
     else:
         print stdout
+
 
 @tf.command()
 def destroy():
@@ -549,15 +550,17 @@ def destroy():
         return
     region = parser.get('profile pollexy', 'region')
     print 'Destroying environment . . . '
-    code, stdout, stderr = tf.destroy(var={'aws_region':region})
+    code, stdout, stderr = tf.destroy(var={'aws_region': region})
     if (stderr):
         print stderr
     else:
         print stdout
 
+
 @cli.group('credentials')
 def creds():
     pass
+
 
 @creds.command()
 @click.argument('access_key')
@@ -575,9 +578,9 @@ def configure(access_key, secret_key, region):
     config_parser.read(config)
     config_sect = 'profile pollexy'
     creds_sect = 'pollexy'
-    if not config_sect in config_parser.sections():
+    if config_sect not in config_parser.sections():
         config_parser.add_section(config_sect)
-    if not creds_sect in creds_parser.sections():
+    if creds_sect not in creds_parser.sections():
         creds_parser.add_section(creds_sect)
     creds_parser.set(creds_sect, 'aws_access_key_id', access_key)
     creds_parser.set(creds_sect, 'aws_secret_access_key', secret_key)
@@ -586,6 +589,7 @@ def configure(access_key, secret_key, region):
         config_parser.write(config_file)
     with open(creds, 'w') as creds_file:
         creds_parser.write(creds_file)
+
 
 if __name__ == '__main__':
     cli(obj=Config())
