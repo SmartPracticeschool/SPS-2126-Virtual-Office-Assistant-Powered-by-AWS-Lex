@@ -124,7 +124,11 @@ Your IP address and login information is located here:
 *`Amazon Pollexy` is pre-installed and every action uses the `pollexy` command.*
 
 1. Login to the pi.
-2. After you login, run this command to configure AWS security:
+2. Go to `/root/pollexy` and run this command to update to the latest version:
+
+        $ ./update.sjh
+        
+3. After you login, run this command to configure AWS security:
 
         $ pollexy credentials configure ACCESS_KEY SECRET_KEY REGION
 
