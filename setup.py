@@ -6,8 +6,8 @@ with open('requirements.txt') as f:
     requirements = f.read().splitlines()
 
 setup(
-        name='Pollexy Client',
-        version='1.3.6',
+        name='Amazon Pollexy Client',
+        version='1.3.8',
         packages=['cli', 'input', 'scheduler', 'helpers', 'face', 'cache', 'speaker', 'tests', 'time_window', 'lambda_functions', 'locator', 'person', 'messages'],
         py_modules=['scheduler.scheduler', 'cache.cache_manager',
                     'helpers.speech', 'speaker.speaker', 'messages',

@@ -35,6 +35,8 @@ import boto3
 logging.basicConfig(level=logging.WARN,
                     format='%(asctime)s - %(levelname)s'
                     '- %(message)s')
+print 'Amazon Pollexy'
+print 'Copyright 2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.\n'
 
 class Config():
     def __init__(self):
@@ -592,5 +594,3 @@ if __name__ == '__main__':
 def click_warn(msg):
     logging.warn(msg)
     click.echo(msg)
-
-
