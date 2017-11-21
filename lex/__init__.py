@@ -7,6 +7,51 @@ import pprint
 from botocore.exceptions import ClientError
 
 
+class LexSlotManager:
+    def __init__(self, **kwargs):
+        self.client = boto3.client('lex-models')
+        self.config_path = kwargs.get('ConfigPath')
+
+    def load(self):
+        slots = {}
+        for f in os.listdir(self.config_path):
+            config_file = os.path.join(self.config_path, f)
+            if not config_file.endswith('yaml') \
+               and not config_file.endswith('yml'):
+                continue
+            with open(config_file, 'r') as stream:
+                slots.update(yaml.load(stream))
+            return slots
+
+    def get_slot_type(self, **kwargs):
+        try:
+            s = self.client.get_slot_type(
+                name=kwargs.get('Name'),
+                version=kwargs.get('Version', '$ALIAS'))
+            return s
+
+        except ClientError as e:
+            if e.response and \
+               e.response['Error']['Code'] == 'NotFoundException':
+                return None
+            else:
+                raise
+
+    def upsert(self, slot):
+        args = {}
+        for l in slot.keys():
+            args[l] = slot[l]
+        print 'Upserting slot: {}'.format(slot['name'])
+        current_slot = self.get_slot_type(
+            Name=slot['name'],
+            Version='$LATEST'
+
+        )
+        if current_slot:
+            args['checksum'] = current_slot['checksum']
+        return self.client.put_slot_type(**args)
+
+
 class LexIntentManager:
     def __init__(self, **kwargs):
         self.client = boto3.client('lex-models')

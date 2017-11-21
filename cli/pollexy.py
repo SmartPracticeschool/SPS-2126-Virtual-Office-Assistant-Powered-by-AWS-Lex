@@ -30,7 +30,7 @@ import json
 from ConfigParser import SafeConfigParser
 from python_terraform import Terraform
 from subprocess import call
-from lex import LexBotManager, LexIntentManager
+from lex import LexBotManager, LexIntentManager, LexSlotManager
 
 logging.basicConfig(level=logging.WARN,
                     format='%(asctime)s - %(levelname)s'
@@ -114,6 +114,22 @@ def apply_bots(config_path):
 @lex.group('intent')
 def lex_intent():
     pass
+
+
+@lex.group('slot_type')
+def lex_slot_type():
+    pass
+
+
+@lex_slot_type.command('apply')
+@click.argument('config_path')
+def apply_slots(config_path):
+    sm = LexSlotManager(ConfigPath=config_path)
+    slots = sm.load()
+    for i in slots.keys():
+        slot = slots[i]
+        print slot
+        slot = sm.upsert(slot)
 
 
 @lex_intent.command('apply')

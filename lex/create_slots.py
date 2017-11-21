@@ -1,7 +1,6 @@
 import yaml
 import boto3
 import os
-import time
 client = boto3.client('lex-models')
 for f in os.listdir('slots'):
     config_file = os.path.join('slots', f)
