@@ -30,6 +30,7 @@ import json
 from ConfigParser import SafeConfigParser
 from python_terraform import Terraform
 from subprocess import call
+from lex import LexBotManager, LexIntentManager
 
 logging.basicConfig(level=logging.WARN,
                     format='%(asctime)s - %(levelname)s'
@@ -55,8 +56,10 @@ def say(**kwargs):
 @click.option('--profile', default='pollexy')
 @click.option('--region')
 def cli(profile, region):
+    print 'profile = {}'.format(profile)
     os.environ['AWS_PROFILE'] = profile
     if region:
+        print 'region = {}'.format(region)
         os.environ['AWS_DEFAULT_REGION'] = region
     pass
 
@@ -83,6 +86,45 @@ def error_if_all(obj, items):
     if (len(items) == i):
         raise ValueError("Can't pass these items at the same time: %s"
                          % ",".join(items))
+
+
+@cli.group('lex')
+def lex():
+    pass
+
+
+@lex.group('bot')
+def lex_bot():
+    pass
+
+
+@lex_bot.command('apply')
+@click.argument('config_path')
+def apply_bots(config_path):
+    bm = LexBotManager(ConfigPath=config_path)
+    bots = bm.load_bots()
+    for k in bots.keys():
+        bot = bots[k]
+        status, bot = bm.upsert(bot)
+        if not status == 'FAILED':
+            bot = bm.create_version(bot)
+            bot = bm.update_alias(bot, Version='$LATEST')
+
+
+@lex.group('intent')
+def lex_intent():
+    pass
+
+
+@lex_intent.command('apply')
+@click.argument('config_path')
+def apply_intents(config_path):
+    im = LexIntentManager(ConfigPath=config_path)
+    intents = im.load()
+    for i in intents.keys():
+        intent = intents[i]
+        intent = im.upsert(intent)
+        im.create_version(intent)
 
 
 @cli.group('person')
