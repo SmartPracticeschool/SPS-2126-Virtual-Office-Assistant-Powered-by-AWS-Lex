@@ -111,6 +111,13 @@ def apply_bots(config_path):
             bot = bm.update_alias(bot, Version='$LATEST')
 
 
+@lex_bot.command('delete')
+@click.argument('bot_name')
+def delete_botbot_name(bot_name):
+    bm = LexBotManager()
+    bm.delete_bot(Name=bot_name)
+
+
 @lex.group('intent')
 def lex_intent():
     pass

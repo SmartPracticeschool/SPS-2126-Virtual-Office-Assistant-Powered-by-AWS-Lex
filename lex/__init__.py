@@ -2,8 +2,8 @@
 import yaml
 import boto3
 import os
-import time
 import pprint
+import time
 from botocore.exceptions import ClientError
 
 
@@ -169,6 +169,15 @@ class LexBotManager:
         args = {}
         for l in bot.keys():
             args[l] = bot[l]
+        for i in bot['intents']:
+            if i['intentVersion'] == '$LATEST':
+                print i['intentVersion']
+                intents = self.client.get_intent_versions(
+                    name=i['intentName'], maxResults=50)['intents']
+                if len(intents) > 0:
+                    latestVersion = intents[len(intents)-1]['version']
+                    print 'Latest intent version = {}'.format(latestVersion)
+                    i['intentVersion'] = latestVersion
         print 'Creating bot: {}'.format(bot['name'])
         current_bot = self.get_bot(
             Name=bot['name']
@@ -198,6 +207,7 @@ class LexBotManager:
         )
         bot['version'] = str(resp['version'])
         print 'Version = {}'.format(bot['version'])
+        time.sleep(2)
         return bot
 
     def update_alias(self, bot, **kwargs):
@@ -230,6 +240,28 @@ class LexBotManager:
                 pprint.pprint(e)
                 print "Error creating bot: {}".format(resp)
         print 'Alias updated'
+
+    def delete_bot(self, **kwargs):
+        bot_name = kwargs.get('Name')
+        aliases = self.client.get_bot_aliases(
+            botName=bot_name)
+        for a in aliases['BotAliases']:
+            print 'Deleting {}:{}'.format(bot_name, a)
+            pprint.pprint(a)
+            self.client.delete_bot_alias(
+                botName=bot_name,
+                name=a['name'])
+            time.sleep(2)
+        print 'Deleting {}'.format(bot_name)
+        try:
+            self.client.delete_bot(name=bot_name)
+            print 'Deleted bot'
+        except ClientError as e:
+            if e.response and \
+               e.response['Error']['Code'] == 'NotFoundException':
+                print "Bot doesn't exist: {}".format(bot_name)
+            else:
+                raise
 
 
 # bm = BotManager()
