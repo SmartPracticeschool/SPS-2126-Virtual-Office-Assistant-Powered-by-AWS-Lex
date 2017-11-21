@@ -25,99 +25,118 @@ Your IP address and login information is located here:
 1. Create a new user with this policy, and create an access/secret key.
 ```json
 {
-  "Version":"2012-10-17",
-  "Statement":[
-    {
-      "Sid":"VisualEditor0",
-      "Effect":"Allow",
-      "Action":[
-        "cloudformation:CreateUploadBucket",
-        "cloudformation:ListStacks",
-        "cloudformation:EstimateTemplateCost",
-        "cloudformation:PreviewStackUpdate",
-        "cloudformation:DescribeAccountLimits",
-        "cloudformation:DescribeChangeSet",
-        "cloudformation:ValidateTemplate",
-        "logs:DescribeExportTasks",
-        "logs:DescribeLogGroups",
-        "s3:ListAllMyBuckets",
-        "s3:HeadBucket",
-        "sqs:ListQueues"
-      ],
-      "Resource":"*"
-    },
-    {
-      "Sid":"VisualEditor1",
-      "Effect":"Allow",
-      "Action":"lambda:*",
-      "Resource":"arn:aws:lambda:*:*:function:pollexy*"
-    },
-    {
-      "Sid":"VisualEditor2",
-      "Effect":"Allow",
-      "Action":"iam:*",
-      "Resource":"arn:aws:iam::*:policy/pollexy*"
-    },
-    {
-      "Sid":"VisualEditor3",
-      "Effect":"Allow",
-      "Action":"iam:*",
-      "Resource":"arn:aws:iam::*:role/pollexy*"
-    },
-    {
-      "Sid":"VisualEditor4",
-      "Effect":"Allow",
-      "Action":"logs:*",
-      "Resource":[
-        "arn:aws:logs:*:*:log-group:HandlerLogGroup",
-        "arn:aws:logs:*:*:log-group:/aws/lambda/pollexy*:*:*"
-      ]
-    },
-    {
-      "Sid":"VisualEditor5",
-      "Effect":"Allow",
-      "Action":"s3:*",
-      "Resource":"arn:aws:s3:::pollexy*"
-    },
-    {
-      "Sid":"VisualEditor6",
-      "Effect":"Allow",
-      "Action":"s3:*",
-      "Resource":"arn:aws:s3:::pollexy*/*"
-    },
-    {
-      "Sid":"VisualEditor7",
-      "Effect":"Allow",
-      "Action":"cloudformation:*",
-      "Resource":"arn:aws:cloudformation:*:*:stack/pollexy*/*"
-    },
-    {
-      "Sid":"VisualEditor8",
-      "Effect":"Allow",
-      "Action":"s3:*",
-      "Resource":[
-        "arn:aws:s3:::pi-case/*",
-        "arn:aws:s3:::pi-case"
-      ]
-    },
-    {
-      "Sid":"VisualEditor9",
-      "Effect":"Allow",
-      "Action":"dynamodb:*",
-      "Resource":[
-        "arn:aws:dynamodb:*:*:table/PollexyPeople",
-        "arn:aws:dynamodb:*:*:table/PollexyLocations",
-        "arn:aws:dynamodb:*:*:table/PollexyMessageLibrary",
-        "arn:aws:dynamodb:*:*:table/PollexyMessageSchedule"
-      ]
-    },
-    {
-      "Sid":"VisualEditor10",
-      "Effect":"Allow",
-      "Action":"sqs:*",
-      "Resource":"arn:aws:sqs:*:*:pollexy*"
-    }
-  ]
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "VisualEditor0",
+            "Effect": "Allow",
+            "Action": [
+                "lex:GetBuiltinIntent",
+                "cloudformation:CreateUploadBucket",
+                "sqs:ListQueues",
+                "cloudformation:ListStacks",
+                "lex:GetBots",
+                "logs:DescribeLogGroups",
+                "lex:GetBuiltinSlotTypes",
+                "cloudformation:EstimateTemplateCost",
+                "lex:GetIntents",
+                "cloudformation:PreviewStackUpdate",
+                "logs:DescribeExportTasks",
+                "lex:GetSlotTypes",
+                "s3:ListAllMyBuckets",
+                "cloudformation:DescribeAccountLimits",
+                "lex:PostText",
+                "s3:HeadBucket",
+                "cloudformation:DescribeChangeSet",
+                "lex:GetBuiltinIntents",
+                "cloudformation:ValidateTemplate",
+                "lex:PostContent"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "VisualEditor1",
+            "Effect": "Allow",
+            "Action": "lex:*",
+            "Resource": [
+                "arn:aws:lex:*:*:bot:Pollexy*:*",
+                "arn:aws:lex:*:*:intent:Pollexy*:",
+                "arn:aws:lex:*:*:slottype:Pollexy*:*",
+                "arn:aws:lex:*:*:bot-channel:*:*:Pollexy*"
+            ]
+        },
+        {
+            "Sid": "VisualEditor2",
+            "Effect": "Allow",
+            "Action": "lambda:*",
+            "Resource": "arn:aws:lambda:*:*:function:pollexy*"
+        },
+        {
+            "Sid": "VisualEditor3",
+            "Effect": "Allow",
+            "Action": "iam:*",
+            "Resource": "arn:aws:iam::*:policy/pollexy*"
+        },
+        {
+            "Sid": "VisualEditor4",
+            "Effect": "Allow",
+            "Action": "iam:*",
+            "Resource": "arn:aws:iam::*:role/pollexy*"
+        },
+        {
+            "Sid": "VisualEditor5",
+            "Effect": "Allow",
+            "Action": "logs:*",
+            "Resource": [
+                "arn:aws:logs:*:*:log-group:HandlerLogGroup",
+                "arn:aws:logs:*:*:log-group:/aws/lambda/pollexy*:*:*"
+            ]
+        },
+        {
+            "Sid": "VisualEditor6",
+            "Effect": "Allow",
+            "Action": "s3:*",
+            "Resource": "arn:aws:s3:::pollexy*"
+        },
+        {
+            "Sid": "VisualEditor7",
+            "Effect": "Allow",
+            "Action": "s3:*",
+            "Resource": "arn:aws:s3:::pollexy*/*"
+        },
+        {
+            "Sid": "VisualEditor8",
+            "Effect": "Allow",
+            "Action": "cloudformation:*",
+            "Resource": "arn:aws:cloudformation:*:*:stack/pollexy*/*"
+        },
+        {
+            "Sid": "VisualEditor9",
+            "Effect": "Allow",
+            "Action": "s3:*",
+            "Resource": [
+                "arn:aws:s3:::pi-case/*",
+                "arn:aws:s3:::pi-case"
+            ]
+        },
+        {
+            "Sid": "VisualEditor10",
+            "Effect": "Allow",
+            "Action": "dynamodb:*",
+            "Resource": [
+                "arn:aws:dynamodb:*:*:table/PollexyPeople",
+                "arn:aws:dynamodb:*:*:table/PollexyLocations",
+                "arn:aws:dynamodb:*:*:table/PollexyMessageLibrary",
+                "arn:aws:dynamodb:*:*:table/PollexyMessageSchedule"
+            ]
+        },
+        {
+            "Sid": "VisualEditor11",
+            "Effect": "Allow",
+            "Action": "sqs:*",
+            "Resource": "arn:aws:sqs:*:*:pollexy*"
+        }
+    ]
 }
 ```
 ## Step 4: Configure Pollexy Credentials
