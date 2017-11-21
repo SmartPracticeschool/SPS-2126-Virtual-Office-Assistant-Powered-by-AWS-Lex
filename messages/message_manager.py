@@ -6,7 +6,7 @@
 #    http://aws.amazon.com/asl/
 # or in the "license" file accompanying this file. This file is distributed
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, expressi
-# or implied. See the License for the specific language governing permissions 
+# or implied. See the License for the specific language governing permissions
 # and limitations under the License.
 
 """interacts with the message queue, reading and publishing messages"""
@@ -36,7 +36,8 @@ def get_queue(location_name):
         if 'NonExistentQueue' in exception:
             return None
 
-    except:
+    except Exception as e:
+        print e
         raise
 
     for queue in sqs.queues.all():
@@ -65,7 +66,8 @@ class MessageManager(object):
             queue = get_queue(self.location_name)
             if queue is None:
                 queue = sqs.create_queue(QueueName=self.queue_name)
-        except:
+        except Exception as e:
+            print e
             self.is_valid_queue = False
             raise
         else:

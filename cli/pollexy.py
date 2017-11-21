@@ -170,6 +170,20 @@ def message():
     pass
 
 
+@message.command('list')
+@click.argument('person_name')
+@click.option('--include_expired/--dont_include_expired', default=False)
+def list(person_name, include_expired):
+    s = Scheduler()
+    msgs = s.get_messages()
+    for m in msgs:
+        if not m.person_name == person_name:
+            continue
+        print '* {}\n "{}"\n Next: {}\n'.format(m.uuid_key,
+                                                m.body,
+                                                m.next_occurrence_local)
+
+
 @message.command('speak')
 @click.argument('person_name')
 @click.argument('location_name')

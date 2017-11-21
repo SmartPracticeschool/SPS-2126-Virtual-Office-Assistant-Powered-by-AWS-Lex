@@ -70,7 +70,6 @@ class ScheduledMessage(object):
                 rrule['freq'] = self.frequency
             if rrule:
                 ev.add('rrule', rrule)
-            print ev.to_ical()
             return ev.to_ical()
 
     def __str__(self):
@@ -80,6 +79,7 @@ class ScheduledMessage(object):
         return "\n".join([
             '',
             'uuid_key: %s' % self.uuid_key,
+            'person_name: %s' % self.person_name,
             'start_time (UTC): %s' % self.start_datetime_in_utc,
             'start_time (local): %s' % self.start_datetime_in_utc.to('local'),
             'end_time (UTC): %s' % self.end_datetime_in_utc or "None",
@@ -169,7 +169,6 @@ class ScheduledMessage(object):
             return 'N/A', arrow.utcnow().replace(minutes=+10)
         if (expires > self.end_datetime_in_utc):
             expires = self.end_datetime_in_utc
-        print 'Next = ' + str(arrow.get(next_occur))
         return arrow.get(next_occur), arrow.get(expires)
 
     def is_message_ready(self, **kwargs):
@@ -180,9 +179,6 @@ class ScheduledMessage(object):
         if next_occur == 'N/A':
             return True
         compare_datetime = self.compare_datetime_in_utc or arrow.utcnow()
-        print 'Compare: {}'.format(compare_datetime)
-        print 'Next: {}', next_occur
-        print next_occur <= compare_datetime
         if next_occur <= compare_datetime and \
             (not self.end_datetime_in_utc or
                 (self.end_datetime_in_utc and
