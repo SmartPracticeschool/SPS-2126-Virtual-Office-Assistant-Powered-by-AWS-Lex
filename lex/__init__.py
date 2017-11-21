@@ -264,11 +264,47 @@ class LexBotManager:
                 raise
 
 
-# bm = BotManager()
-# client = boto3.client('lex-models')
-# bots = bm.load_bots('bots')
-# for k in bots.keys():
-#    bot = bots[k]
-#    bot = bm.upsert(bot)
-#    bot = bm.create_version(bot)
-#    bot = bm.update_alias(bot, Version='$LATEST')
+class LexPlayer(object):
+    def __init__(self, **kwargs):
+        self.bot_name = kwargs.get('BotName')
+        self.username = kwargs.get('Username')
+        self.alias = kwargs.get('Alias')
+        self.no_audio = bool(kwargs.get('NoAudio', False))
+        self.last_response = {}
+        self.client = boto3.client('lex-runtime')
+        print kwargs.get('Alias')
+
+    def post_response(self, data):
+        if self.no_audio:
+            self.post_text(data)
+
+    def post_text(self, text):
+        self.last_response = self.client.post_text(botName=self.bot_name,
+                                                   botAlias=self.alias,
+                                                   userId=self.username,
+                                                   inputText=text)
+
+    @property
+    def is_done(self):
+        if not self.last_response:
+            return False
+
+        if 'dialogState' in self.last_response.keys():
+            state = self.last_response['dialogState']
+            if state == 'ReadyForFulfillment':
+                return True
+            elif state == 'ElicitIntent':
+                return False
+
+        return False
+
+    def get_user_input(self):
+        if not self.last_response:
+            message = "Hello, welcome to the {} bot.".format(self.bot_name)
+        elif self.last_response and 'message' in self.last_response.keys():
+            message = self.last_response['message']
+        else:
+            message = "Something is wrong."
+        if self.no_audio:
+            answer = raw_input('{}\n> '.format(message))
+            self.post_response(answer)

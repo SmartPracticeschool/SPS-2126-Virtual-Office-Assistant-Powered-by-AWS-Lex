@@ -30,7 +30,7 @@ import json
 from ConfigParser import SafeConfigParser
 from python_terraform import Terraform
 from subprocess import call
-from lex import LexBotManager, LexIntentManager, LexSlotManager
+from lex import LexBotManager, LexIntentManager, LexSlotManager, LexPlayer
 
 logging.basicConfig(level=logging.WARN,
                     format='%(asctime)s - %(levelname)s'
@@ -148,6 +148,21 @@ def apply_intents(config_path):
         intent = intents[i]
         intent = im.upsert(intent)
         im.create_version(intent)
+
+
+@lex.command('play')
+@click.argument('bot_name')
+@click.option('--alias', default='LATEST')
+@click.option('--username', default='PollexyUser')
+@click.option('--no_audio/--audio', default=False)
+def lex_play(bot_name, alias, username, no_audio):
+    lp = LexPlayer(
+        BotName=bot_name,
+        Alias=alias,
+        Username=username,
+        NoAudio=no_audio)
+    while (not lp.is_done):
+        lp.get_user_input()
 
 
 @cli.group('person')
