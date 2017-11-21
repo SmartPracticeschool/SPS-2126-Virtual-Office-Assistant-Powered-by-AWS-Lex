@@ -29,6 +29,7 @@ import sys
 import json
 from ConfigParser import SafeConfigParser
 from python_terraform import Terraform
+from subprocess import call
 
 logging.basicConfig(level=logging.WARN,
                     format='%(asctime)s - %(levelname)s'
@@ -480,6 +481,16 @@ def update_library_message(obj):
         lm.update_message(Name=obj.message_name, Message=obj.message)
     except Exception as exc:
         click.echo("Error: %s" % str(exc))
+
+
+@cli.group('serverless')
+def srvls():
+    pass
+
+
+@srvls.command('deploy')
+def deploy():
+    call(["serverless", "deploy"])
 
 
 @cli.group('terraform')
