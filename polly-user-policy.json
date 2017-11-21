@@ -5,41 +5,60 @@
             "Sid": "VisualEditor0",
             "Effect": "Allow",
             "Action": [
+                "lex:GetBuiltinIntent",
                 "cloudformation:CreateUploadBucket",
+                "sqs:ListQueues",
                 "cloudformation:ListStacks",
-                "cloudformation:EstimateTemplateCost",
-                "cloudformation:PreviewStackUpdate",
-                "cloudformation:DescribeAccountLimits",
-                "cloudformation:DescribeChangeSet",
-                "cloudformation:ValidateTemplate",
-                "logs:DescribeExportTasks",
+                "lex:GetBots",
                 "logs:DescribeLogGroups",
+                "lex:GetBuiltinSlotTypes",
+                "cloudformation:EstimateTemplateCost",
+                "lex:GetIntents",
+                "cloudformation:PreviewStackUpdate",
+                "logs:DescribeExportTasks",
+                "lex:GetSlotTypes",
                 "s3:ListAllMyBuckets",
+                "cloudformation:DescribeAccountLimits",
+                "lex:PostText",
                 "s3:HeadBucket",
-                "sqs:ListQueues"
+                "cloudformation:DescribeChangeSet",
+                "lex:GetBuiltinIntents",
+                "cloudformation:ValidateTemplate",
+                "lex:PostContent"
             ],
             "Resource": "*"
         },
         {
             "Sid": "VisualEditor1",
             "Effect": "Allow",
-            "Action": "lambda:*",
-            "Resource": "arn:aws:lambda:*:*:function:pollexy*"
+            "Action": "lex:*",
+            "Resource": [
+                "arn:aws:lex:*:*:bot:Pollexy*:*",
+                "arn:aws:lex:*:*:intent:Pollexy*:",
+                "arn:aws:lex:*:*:slottype:Pollexy*:*",
+                "arn:aws:lex:*:*:bot-channel:*:*:Pollexy*"
+            ]
         },
         {
             "Sid": "VisualEditor2",
             "Effect": "Allow",
-            "Action": "iam:*",
-            "Resource": "arn:aws:iam::*:policy/pollexy*"
+            "Action": "lambda:*",
+            "Resource": "arn:aws:lambda:*:*:function:pollexy*"
         },
         {
             "Sid": "VisualEditor3",
             "Effect": "Allow",
             "Action": "iam:*",
-            "Resource": "arn:aws:iam::*:role/pollexy*"
+            "Resource": "arn:aws:iam::*:policy/pollexy*"
         },
         {
             "Sid": "VisualEditor4",
+            "Effect": "Allow",
+            "Action": "iam:*",
+            "Resource": "arn:aws:iam::*:role/pollexy*"
+        },
+        {
+            "Sid": "VisualEditor5",
             "Effect": "Allow",
             "Action": "logs:*",
             "Resource": [
@@ -48,25 +67,25 @@
             ]
         },
         {
-            "Sid": "VisualEditor5",
+            "Sid": "VisualEditor6",
             "Effect": "Allow",
             "Action": "s3:*",
             "Resource": "arn:aws:s3:::pollexy*"
         },
         {
-            "Sid": "VisualEditor6",
+            "Sid": "VisualEditor7",
             "Effect": "Allow",
             "Action": "s3:*",
             "Resource": "arn:aws:s3:::pollexy*/*"
         },
         {
-            "Sid": "VisualEditor7",
+            "Sid": "VisualEditor8",
             "Effect": "Allow",
             "Action": "cloudformation:*",
             "Resource": "arn:aws:cloudformation:*:*:stack/pollexy*/*"
         },
         {
-            "Sid": "VisualEditor8",
+            "Sid": "VisualEditor9",
             "Effect": "Allow",
             "Action": "s3:*",
             "Resource": [
@@ -75,7 +94,7 @@
             ]
         },
         {
-            "Sid": "VisualEditor9",
+            "Sid": "VisualEditor10",
             "Effect": "Allow",
             "Action": "dynamodb:*",
             "Resource": [
@@ -86,7 +105,7 @@
             ]
         },
         {
-            "Sid": "VisualEditor10",
+            "Sid": "VisualEditor11",
             "Effect": "Allow",
             "Action": "sqs:*",
             "Resource": "arn:aws:sqs:*:*:pollexy*"
