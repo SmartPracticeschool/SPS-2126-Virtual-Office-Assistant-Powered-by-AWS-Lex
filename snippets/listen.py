@@ -18,7 +18,7 @@ r = sr.Recognizer()
 
 
 def listen():
-    with sr.Microphone(sample_rate=44100) as source:
+    with sr.Microphone(sample_rate = 44100, chunk_size = 512) as source:
 #        r.adjust_for_ambient_noice(source)
         print 'Listening . . .'
         audio = r.listen(source)
