@@ -6,6 +6,8 @@ import pprint
 import time
 import speech_recognition as sr
 import tempfile
+import uuid
+from speaker.speaker import Speaker
 from botocore.exceptions import ClientError
 
 
@@ -272,6 +274,7 @@ class LexBot(object):
         self.alias = kwargs.get('Alias')
         self.no_audio = kwargs.get('NoAudio')
         self.bot_name = kwargs.get('BotName')
+        self.voice_id = kwargs.get('VoiceId', 'Joanna')
         self.last_response = {}
         self.client = boto3.client('lex-runtime')
         self.load_bot()
@@ -285,6 +288,20 @@ class LexBot(object):
     def send_response(self, data):
         if self.no_audio:
             self.post_text(data)
+        else:
+            self.post_content(data)
+
+    def send_content(self, audio_file_path):
+        f = open(audio_file_path, 'rb')
+        self.last_response = self.client.post_content(
+                botName=self.bot_name,
+                botAlias=self.alias,
+                userId=self.username,
+                inputStream=f,
+                accept='text/plain; charset=utf-8',
+                contentType="audio/l16; rate=16000; channels=1")
+        pprint.pprint(self.last_response)
+
 
     def post_text(self, text):
         self.last_response = self.client.post_text(botName=self.bot_name,
@@ -320,21 +337,31 @@ class LexBot(object):
             answer = raw_input('{}\n> '.format(message))
             self.send_response(answer)
         else:
-            print '{}\n(Listening for response)'
+            self.speak(Message=message)
             audio_file_path = self.listen()
-            print audio_file_path
+            self.send_content(audio_file_path)
 
     def listen(self):
         r = sr.Recognizer()
-        with sr.Microphone(sample_rate=44100, chunk_size=512) as source:
+        with sr.Microphone(device_index=1,
+                           sample_rate=16000, chunk_size=512) as source:
             # r.adjust_for_ambient_noice(source)
             print 'Listening . . .'
             audio = r.listen(source)
             print 'Done listening. Writing file . . . '
-            tf = tempfile.NamedTemporaryFile()
-            with open(tf, 'wb') as f:
+            filename = os.path.join('/tmp', str(uuid.uuid4()))
+            with open(filename, 'wb') as f:
                 f.write(audio.get_wav_data())
-            return tf
+                print 'writing ' + filename
+            return filename
+
+    def speak(self, **kwargs):
+        msg = kwargs.get('Message')
+        s = Speaker()
+        s.generate_audio(Message=msg, TextType='text',
+             VoiceId=self.voice_id)
+        s.speak(IncludeChime=False)
+
 
 
 class LexBotHistoryItem(object):
