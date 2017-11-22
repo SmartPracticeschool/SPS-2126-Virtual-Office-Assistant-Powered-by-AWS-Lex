@@ -4,6 +4,8 @@ import boto3
 import os
 import pprint
 import time
+import speech_recognition as sr
+import tempfile
 from botocore.exceptions import ClientError
 
 
@@ -317,6 +319,22 @@ class LexBot(object):
         if self.no_audio:
             answer = raw_input('{}\n> '.format(message))
             self.send_response(answer)
+        else:
+            print '{}\n(Listening for response)'
+            audio_file_path = self.listen()
+            print audio_file_path
+
+    def listen(self):
+        r = sr.Recognizer()
+        with sr.Microphone(sample_rate=44100, chunk_size=512) as source:
+            # r.adjust_for_ambient_noice(source)
+            print 'Listening . . .'
+            audio = r.listen(source)
+            print 'Done listening. Writing file . . . '
+            tf = tempfile.NamedTemporaryFile()
+            with open(tf, 'wb') as f:
+                f.write(audio.get_wav_data())
+            return tf
 
 
 class LexBotHistoryItem(object):
