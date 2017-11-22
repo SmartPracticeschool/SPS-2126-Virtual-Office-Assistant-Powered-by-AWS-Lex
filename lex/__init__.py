@@ -285,12 +285,11 @@ class LexBot(object):
         self.bot = getattr(m, self.bot_name)(self)
         self.bot.register()
 
-    def send_response(self, data):
-        if self.no_audio:
+    def send_response(self, data, no_audio=None):
+        if no_audio or self.no_audio:
             self.post_text(data)
         else:
             self.send_content(data)
-            print self.last_response
 
         if self.is_fulfilled:
             self.bot.on_fulfilled()
@@ -335,6 +334,12 @@ class LexBot(object):
         return 'dialogState' in self.last_response.keys() and \
                 self.last_response['dialogState'] == 'ElicitIntent'
 
+    @property
+    def last_thing_said(self):
+        if self.last_response and \
+            'inputTranscript' in self.last_response.keys():
+                return self.last_response['inputTranscript']
+
 
     @property
     def is_failed(self):
@@ -343,8 +348,12 @@ class LexBot(object):
 
     @property
     def is_fulfilled(self):
-        return 'dialogState' in self.last_response.keys() and \
-            self.last_response['dialogState'] == 'ReadyForFulfillment'
+            self.last_state == 'ReadyForFulfillment'
+
+    @property
+    def last_state(self):
+        if 'dialogState' in self.last_response.keys():
+            return self.last_response['dialogState']
 
     def get_user_input(self):
         if not self.last_response:
@@ -439,6 +448,24 @@ class LexPlayer(object):
     def send_response(self, data):
         self.active_bot.send_response(data)
 
+    def switch_bot(self, **kwargs):
+        if self.active_bot_name:
+            self.bots[self.active_bot_name].bot.on_transition_out()
+        self.active_bot_name = kwargs.get('BotName')
+        print 'Switching bot to ' + self.active_bot_name
+        self.bots[self.active_bot_name].bot.on_transition_in()
+        ice_breaker = kwargs.get('IceBreaker')
+        if ice_breaker:
+            self.active_bot.send_response(ice_breaker)
+
+    @property
+    def last_thing_said(self):
+        return self.active_bot.last_thing_said
+
+    @property
+    def last_state(self):
+        return self.active_bot.last_state
+
     @property
     def last_response(self):
         return self.active_bot.last_response
@@ -447,3 +474,12 @@ class LexPlayer(object):
         if len(self.history) == 0:
             self.active_bot.ice_breaker = self.ice_breaker
         self.active_bot.get_user_input()
+        if self.active_bot.needs_intent:
+            print self.last_thing_said
+            for b in self.bots:
+                if b == self.active_bot_name:
+                    continue
+                self.bots[b].send_response(self.last_thing_said, True)
+                if not self.bots[b].needs_intent:
+                    self.switch_bot(BotName=b)
+                    break
