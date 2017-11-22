@@ -21,7 +21,7 @@ class LexSlotManager:
                 continue
             with open(config_file, 'r') as stream:
                 slots.update(yaml.load(stream))
-            return slots
+        return slots
 
     def get_slot_type(self, **kwargs):
         try:
@@ -66,7 +66,7 @@ class LexIntentManager:
                 continue
             with open(config_file, 'r') as stream:
                 intents.update(yaml.load(stream))
-            return intents
+        return intents
 
     def get_intent(self, intentName, version):
         try:
@@ -163,7 +163,7 @@ class LexBotManager:
                 continue
             with open(config_file, 'r') as stream:
                 bots.update(yaml.load(stream))
-            return bots
+        return bots
 
     def upsert(self, bot):
         args = {}
