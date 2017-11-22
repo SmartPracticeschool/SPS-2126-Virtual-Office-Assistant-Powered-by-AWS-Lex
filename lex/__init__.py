@@ -282,14 +282,21 @@ class LexBot(object):
     def load_bot(self):
         m = __import__('lex.bots.{}'.format(self.bot_name),
                        fromlist=["*"])
-        self.bot = getattr(m, self.bot_name)()
+        self.bot = getattr(m, self.bot_name)(self)
         self.bot.register()
 
     def send_response(self, data):
         if self.no_audio:
             self.post_text(data)
         else:
-            self.post_content(data)
+            self.send_content(data)
+            print self.last_response
+
+        if self.is_fulfilled:
+            self.bot.on_fulfilled()
+
+        elif self.is_failed:
+            self.bot.on_failed(self.last_response)
 
     def send_content(self, audio_file_path):
         f = open(audio_file_path, 'rb')
@@ -300,7 +307,8 @@ class LexBot(object):
                 inputStream=f,
                 accept='text/plain; charset=utf-8',
                 contentType="audio/l16; rate=16000; channels=1")
-        pprint.pprint(self.last_response)
+        if self.needs_intent:
+            self.bot.on_needs_intent()
 
 
     def post_text(self, text):
@@ -309,11 +317,24 @@ class LexBot(object):
                                                    userId=self.username,
                                                    inputText=text)
         self.bot.on_response(text, self.last_response)
-        if self.is_fulfilled:
-            self.bot.on_fulfilled(self.last_response)
 
-        elif self.is_failed:
-            self.bot.on_failed(self.last_response)
+    @property
+    def slots(self):
+        if self.last_response and \
+            'slots' in self.last_response.keys():
+                return self.last_response['slots']
+
+    @property
+    def resp_meta(self):
+        if self.last_response and \
+            'ResponseMetadata' in self.last_response.keys():
+                return self.last_response['ResponseMetadata']
+
+    @property
+    def needs_intent(self):
+        return 'dialogState' in self.last_response.keys() and \
+                self.last_response['dialogState'] == 'ElicitIntent'
+
 
     @property
     def is_failed(self):
@@ -339,7 +360,7 @@ class LexBot(object):
         else:
             self.speak(Message=message)
             audio_file_path = self.listen()
-            self.send_content(audio_file_path)
+            self.send_response(audio_file_path)
 
     def listen(self):
         r = sr.Recognizer()
@@ -357,9 +378,8 @@ class LexBot(object):
 
     def speak(self, **kwargs):
         msg = kwargs.get('Message')
-        s = Speaker()
-        s.generate_audio(Message=msg, TextType='text',
-             VoiceId=self.voice_id)
+        s = Speaker(VoiceId=self.voice_id)
+        s.generate_audio(Message=msg, TextType='text')
         s.speak(IncludeChime=False)
 
 
@@ -383,6 +403,7 @@ class LexPlayer(object):
         self.alias = kwargs.get('Alias')
         self.no_audio = bool(kwargs.get('NoAudio', False))
         self.history = []
+        self.voice_id = kwargs.get('VoiceId', 'Joanna')
         self.client = boto3.client('lex-runtime')
         self.load_bots()
 
@@ -398,6 +419,7 @@ class LexPlayer(object):
             lb = LexBot(BotName=b,
                         NoAudio=self.no_audio,
                         Alias=self.alias,
+                        VoiceId=self.voice_id,
                         Username=self.username)
             self.bots[b] = lb
 

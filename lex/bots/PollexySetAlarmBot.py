@@ -2,13 +2,16 @@ from lex.bots import BaseBot
 
 
 class PollexySetAlarmBot(BaseBot):
-    def __init__(self):
+    def __init__(self, lexbot):
         self.bot_name = 'SetAlarmBot'
+        self.lexbot = lexbot
         super(PollexySetAlarmBot, self).__init__()
 
-    def on_fulfilled(self, last_response):
-        print 'All Done!'
-        super(PollexySetAlarmBot, self).on_fulfilled(last_response)
+    def on_fulfilled(self):
+        t = self.lexbot.slots['TimeSlot']
+        self.lexbot.speak(
+            Message='Your alarm has been scheduled for {}.'.format(t))
+        super(PollexySetAlarmBot, self).on_fulfilled(1)
 
     def on_failed(self, last_response):
         print "No help will be provided."

@@ -154,12 +154,14 @@ def apply_intents(config_path):
 @click.argument('bot_names')
 @click.option('--alias', default='$LATEST')
 @click.option('--username', default='PollexyUser')
+@click.option('--voice_id', default='Joanna')
 @click.option('--no_audio/--audio', default=False)
-def lex_play(bot_names, alias, username, no_audio):
+def lex_play(bot_names, alias, username, voice_id, no_audio):
     lp = LexPlayer(
         BotNames=bot_names,
         Alias=alias,
         Username=username,
+        VoiceId=voice_id,
         NoAudio=no_audio)
     while (not lp.is_done):
         lp.get_user_input()

@@ -2,8 +2,9 @@ from lex.bots import BaseBot
 
 
 class PollexyEmergencyBot(BaseBot):
-    def __init__(self):
+    def __init__(self, lexbot):
         self.bot_name = 'PollexyEmergencyBot'
+        self.lexbot = lexbot
         super(PollexyEmergencyBot, self).__init__()
 
     def on_fulfilled(self, last_response):

@@ -6,7 +6,7 @@
 #    http://aws.amazon.com/asl/
 # or in the "license" file accompanying this file. This file is distributed
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, expressi
-# or implied. See the License for the specific language governing permissions 
+# or implied. See the License for the specific language governing permissions
 # and limitations under the License.
 
 import boto3
@@ -26,7 +26,6 @@ class Speaker(object):
         self.no_audio = kwargs.pop("NoAudio", False)
         self.is_audio_ready = False
         self.audio_file_path = ""
-        print("Initializing Speaker, no_audio=%s" % self.no_audio)
 
     def just_say(self, **kwargs):
         include_chime = kwargs.pop('IncludeChime', False)
@@ -38,7 +37,7 @@ class Speaker(object):
     def generate_audio(self, **kwargs):
         message = kwargs.pop("Message", "")
         text_type = kwargs.pop("TextType", "text")
-        voice = kwargs.pop("VoiceId", "Joanna").capitalize()
+        voice = kwargs.pop("VoiceId", self.voice).capitalize()
         if not message:
             return
         if not self.no_audio:
