@@ -264,17 +264,23 @@ class LexBotManager:
                 raise
 
 
-class LexPlayer(object):
+class LexBot(object):
     def __init__(self, **kwargs):
-        self.bot_name = kwargs.get('BotName')
         self.username = kwargs.get('Username')
         self.alias = kwargs.get('Alias')
-        self.no_audio = bool(kwargs.get('NoAudio', False))
+        self.no_audio = kwargs.get('NoAudio')
+        self.bot_name = kwargs.get('BotName')
         self.last_response = {}
         self.client = boto3.client('lex-runtime')
-        print kwargs.get('Alias')
+        self.load_bot()
 
-    def post_response(self, data):
+    def load_bot(self):
+        m = __import__('lex.bots.{}'.format(self.bot_name),
+                       fromlist=["*"])
+        self.bot = getattr(m, self.bot_name)()
+        self.bot.register()
+
+    def send_response(self, data):
         if self.no_audio:
             self.post_text(data)
 
@@ -283,28 +289,94 @@ class LexPlayer(object):
                                                    botAlias=self.alias,
                                                    userId=self.username,
                                                    inputText=text)
+        self.bot.on_response(text, self.last_response)
+        if self.is_fulfilled:
+            self.bot.on_fulfilled(self.last_response)
+
+        elif self.is_failed:
+            self.bot.on_failed(self.last_response)
 
     @property
-    def is_done(self):
-        if not self.last_response:
-            return False
+    def is_failed(self):
+        return 'dialogState' in self.last_response.keys() and \
+                self.last_response['dialogState'] == 'Failed'
 
-        if 'dialogState' in self.last_response.keys():
-            state = self.last_response['dialogState']
-            if state == 'ReadyForFulfillment':
-                return True
-            elif state == 'ElicitIntent':
-                return False
-
-        return False
+    @property
+    def is_fulfilled(self):
+        return 'dialogState' in self.last_response.keys() and \
+            self.last_response['dialogState'] == 'ReadyForFulfillment'
 
     def get_user_input(self):
         if not self.last_response:
-            message = "Hello, welcome to the {} bot.".format(self.bot_name)
+            message = "Hello, {}. {}".format(self.username,
+                                             self.ice_breaker)
         elif self.last_response and 'message' in self.last_response.keys():
             message = self.last_response['message']
         else:
             message = "Something is wrong."
         if self.no_audio:
             answer = raw_input('{}\n> '.format(message))
-            self.post_response(answer)
+            self.send_response(answer)
+
+
+class LexBotHistoryItem(object):
+    def __init__(self, **kwargs):
+        self.bot_name = kwargs.get('BotName')
+        self.response = kwargs.get('Response')
+        self.post_text = kwargs.get('PostText')
+
+
+class LexPlayer(object):
+    def __init__(self, **kwargs):
+        self.bots = {}
+        self.history = {}
+        self.ice_breaker = kwargs.get('IceBreaker', '')
+        self.bot_names = kwargs.get('BotNames').split(',')
+        self.start_bot_name = kwargs.get('StartBot', self.bot_names[0])
+        self.active_bot_name = self.start_bot_name
+        self.username = kwargs.get('Username')
+        self.alias = kwargs.get('Alias')
+        self.no_audio = bool(kwargs.get('NoAudio', False))
+        self.history = []
+        self.client = boto3.client('lex-runtime')
+        self.load_bots()
+
+    def add_to_history(self, **kwargs):
+        b = LexBotHistoryItem()
+        b.bot_name = kwargs.get('BotName')
+        b.response = kwargs.get('Response')
+        b.post_text = kwargs.get('PostText')
+        self.history.append(b)
+
+    def load_bots(self):
+        for b in self.bot_names:
+            lb = LexBot(BotName=b,
+                        NoAudio=self.no_audio,
+                        Alias=self.alias,
+                        Username=self.username)
+            self.bots[b] = lb
+
+    @property
+    def is_done(self):
+        for b in self.bots.keys():
+            bot = self.bots[b]
+            if not bot.is_fulfilled and not bot.is_failed:
+                return False
+
+        return True
+
+    @property
+    def active_bot(self):
+        return self.bots[self.active_bot_name]
+
+    def send_response(self, data):
+        self.active_bot.send_response(data)
+
+    @property
+    def last_response(self):
+        return self.active_bot.last_response
+
+    def get_user_input(self):
+        if len(self.history) == 0:
+            self.active_bot.ice_breaker = self.ice_breaker
+        self.active_bot.get_user_input()

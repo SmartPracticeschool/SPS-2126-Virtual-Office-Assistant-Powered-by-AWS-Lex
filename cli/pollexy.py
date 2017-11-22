@@ -151,13 +151,13 @@ def apply_intents(config_path):
 
 
 @lex.command('play')
-@click.argument('bot_name')
+@click.argument('bot_names')
 @click.option('--alias', default='LATEST')
 @click.option('--username', default='PollexyUser')
 @click.option('--no_audio/--audio', default=False)
-def lex_play(bot_name, alias, username, no_audio):
+def lex_play(bot_names, alias, username, no_audio):
     lp = LexPlayer(
-        BotName=bot_name,
+        BotNames=bot_names,
         Alias=alias,
         Username=username,
         NoAudio=no_audio)
