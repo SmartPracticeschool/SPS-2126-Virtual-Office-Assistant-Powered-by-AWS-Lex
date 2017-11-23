@@ -5,8 +5,8 @@ import os
 import pprint
 import time
 import speech_recognition as sr
-import tempfile
 import uuid
+import logging
 from speaker.speaker import Speaker
 from botocore.exceptions import ClientError
 
@@ -277,7 +277,11 @@ class LexBot(object):
         self.voice_id = kwargs.get('VoiceId', 'Joanna')
         self.last_response = {}
         self.client = boto3.client('lex-runtime')
+        self.restart = False
+        self.ice_breaker = kwargs.get('IceBreaker')
         self.load_bot()
+        self.log = logging.getLogger("LexBot-{}".format(self.bot_name))
+        self.log.setLevel(logging.DEBUG)
 
     def load_bot(self):
         m = __import__('lex.bots.{}'.format(self.bot_name),
@@ -290,12 +294,12 @@ class LexBot(object):
             self.post_text(data)
         else:
             self.send_content(data)
-
         if self.is_fulfilled:
             self.bot.on_fulfilled()
 
         elif self.is_failed:
-            self.bot.on_failed(self.last_response)
+            self.bot.on_failed()
+        pprint.pprint(self.last_response)
 
     def send_content(self, audio_file_path):
         f = open(audio_file_path, 'rb')
@@ -309,25 +313,24 @@ class LexBot(object):
         if self.needs_intent:
             self.bot.on_needs_intent()
 
-
     def post_text(self, text):
         self.last_response = self.client.post_text(botName=self.bot_name,
                                                    botAlias=self.alias,
                                                    userId=self.username,
                                                    inputText=text)
-        self.bot.on_response(text, self.last_response)
+        self.bot.on_response()
 
     @property
     def slots(self):
         if self.last_response and \
-            'slots' in self.last_response.keys():
-                return self.last_response['slots']
+                'slots' in self.last_response.keys():
+                    return self.last_response['slots']
 
     @property
     def resp_meta(self):
         if self.last_response and \
-            'ResponseMetadata' in self.last_response.keys():
-                return self.last_response['ResponseMetadata']
+                'ResponseMetadata' in self.last_response.keys():
+                    return self.last_response['ResponseMetadata']
 
     @property
     def needs_intent(self):
@@ -336,40 +339,63 @@ class LexBot(object):
 
     @property
     def last_thing_said(self):
-        if self.last_response and \
-            'inputTranscript' in self.last_response.keys():
-                return self.last_response['inputTranscript']
+        if self.no_audio:
+            return self.text_response
+        elif self.last_response and \
+                'inputTranscript' in self.last_response.keys():
+                    return self.last_response['inputTranscript']
 
+    @property
+    def is_done(self):
+        return self.is_fulfilled or self.is_failed
 
     @property
     def is_failed(self):
-        return 'dialogState' in self.last_response.keys() and \
-                self.last_response['dialogState'] == 'Failed'
+        return self.last_state == 'Failed'
 
     @property
     def is_fulfilled(self):
-            self.last_state == 'ReadyForFulfillment'
+        return self.last_state == 'ReadyForFulfillment'
 
     @property
     def last_state(self):
-        if 'dialogState' in self.last_response.keys():
+        if self.last_response and 'dialogState' in self.last_response.keys():
             return self.last_response['dialogState']
 
+    @property
+    def last_intent(self):
+        if self.last_response and 'intentName' in self.last_response.keys():
+            return self.last_response['intentName']
+
     def get_user_input(self):
-        if not self.last_response:
-            message = "Hello, {}. {}".format(self.username,
-                                             self.ice_breaker)
+        self.log.debug('Getting user_input for {}'.format(self.bot_name))
+        message = ""
+        if self.restart:
+            self.log.debug('Starting bot from scratch')
+            print 'Welcome to {}'.format(self.bot_name)
+            if self.ice_breaker:
+                self.log.debug('Ice breaker: "{}"'.format(self.ice_breaker))
+                self.send_response(self.ice_breaker)
+            self.log.debug('Disabling restart flag')
+            self.restart = False
         elif self.last_response and 'message' in self.last_response.keys():
             message = self.last_response['message']
-        else:
+            self.log.debug('Bot is running: {}'.format(message))
+        elif self.last_response and \
+                not self.active_bot.is_fulfilled and not self.is_failed:
+            self.log.debug('Something happened')
             message = "Something is wrong."
+        self.output(Message=message)
         if self.no_audio:
-            answer = raw_input('{}\n> '.format(message))
-            self.send_response(answer)
+            self.text_response = raw_input('> ')
+            self.log.debug('Sending: {}'.format(self.text_response))
+
+            self.send_response(self.text_response)
         else:
             self.speak(Message=message)
             audio_file_path = self.listen()
             self.send_response(audio_file_path)
+        self.last_message = message
 
     def listen(self):
         r = sr.Recognizer()
@@ -385,12 +411,22 @@ class LexBot(object):
                 print 'writing ' + filename
             return filename
 
+    def output(self, **kwargs):
+        msg = kwargs.get('Message')
+        if self.no_audio:
+            self.write(Message=msg)
+        else:
+            self.speak(Message=msg)
+
+    def write(self, **kwargs):
+        msg = kwargs.get('Message')
+        print '{}\n'.format(msg)
+
     def speak(self, **kwargs):
         msg = kwargs.get('Message')
         s = Speaker(VoiceId=self.voice_id)
         s.generate_audio(Message=msg, TextType='text')
         s.speak(IncludeChime=False)
-
 
 
 class LexBotHistoryItem(object):
@@ -403,18 +439,21 @@ class LexBotHistoryItem(object):
 class LexPlayer(object):
     def __init__(self, **kwargs):
         self.bots = {}
-        self.history = {}
+        self.history = []
         self.ice_breaker = kwargs.get('IceBreaker', '')
         self.bot_names = kwargs.get('BotNames').split(',')
         self.start_bot_name = kwargs.get('StartBot', self.bot_names[0])
         self.active_bot_name = self.start_bot_name
-        self.username = kwargs.get('Username')
+        self.username = str(uuid.uuid4())
         self.alias = kwargs.get('Alias')
         self.no_audio = bool(kwargs.get('NoAudio', False))
         self.history = []
         self.voice_id = kwargs.get('VoiceId', 'Joanna')
         self.client = boto3.client('lex-runtime')
+        self.bot_stack = []
         self.load_bots()
+        self.log = logging.getLogger("LexPlayer")
+        self.log.setLevel(logging.DEBUG)
 
     def add_to_history(self, **kwargs):
         b = LexBotHistoryItem()
@@ -449,14 +488,13 @@ class LexPlayer(object):
         self.active_bot.send_response(data)
 
     def switch_bot(self, **kwargs):
+        restart = kwargs.get('Restart', False)
         if self.active_bot_name:
+            self.bot_stack.append(self.active_bot_name)
             self.bots[self.active_bot_name].bot.on_transition_out()
         self.active_bot_name = kwargs.get('BotName')
-        print 'Switching bot to ' + self.active_bot_name
         self.bots[self.active_bot_name].bot.on_transition_in()
-        ice_breaker = kwargs.get('IceBreaker')
-        if ice_breaker:
-            self.active_bot.send_response(ice_breaker)
+        self.bots[self.active_bot_name].bot.restart = restart
 
     @property
     def last_thing_said(self):
@@ -467,19 +505,37 @@ class LexPlayer(object):
         return self.active_bot.last_state
 
     @property
+    def last_intent(self):
+        return self.active_bot.last_intent
+
+    @property
     def last_response(self):
         return self.active_bot.last_response
 
     def get_user_input(self):
-        if len(self.history) == 0:
-            self.active_bot.ice_breaker = self.ice_breaker
         self.active_bot.get_user_input()
+        print 'here'
         if self.active_bot.needs_intent:
-            print self.last_thing_said
+            self.log.debug('{} bot response was not understood: {}'
+                           .format(self.active_bot_name, self.last_thing_said))
+            self.log.debug('Checking other bots')
             for b in self.bots:
                 if b == self.active_bot_name:
                     continue
+                self.log.debug('Checking bot {}'.format(b))
                 self.bots[b].send_response(self.last_thing_said, True)
                 if not self.bots[b].needs_intent:
-                    self.switch_bot(BotName=b)
+                    self.log.debug('Found response from {}'
+                                   .format(b))
+                    if not self.bots[b].is_fulfilled:
+                        self.log.debug('Switching to {}'.format(b))
+                        self.switch_bot(BotName=b, Restart=False)
+                    else:
+                        self.log.debug('Bot {} fulfilled. Continuing with {}'
+                                       .format(b, self.active_bot_name))
+                        self.active_bot.bot.on_transition_in()
                     break
+        elif self.active_bot.is_fulfilled:
+            self.log.debug('Bot {} fulfilled.'.format(self.active_bot_name))
+            if len(self.bot_stack) > 0:
+                self.switch_bot(BotName=self.bot_stack.pop())

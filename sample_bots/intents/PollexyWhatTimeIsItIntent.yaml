@@ -1,0 +1,11 @@
+WhatTimeIsItIntent:
+  description: What time is it?
+  name: PollexyWhatTimeIsItIntent
+  fulfillmentActivity:
+      type: ReturnIntent
+  sampleUtterances:
+  - What time is it
+  - What is the date
+  - What day is it
+  - What is today
+  - what day of the week is it

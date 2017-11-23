@@ -1,20 +1,20 @@
 class BaseBot(object):
-    def on_fulfilled(self, last_response):
+    def on_fulfilled(self):
         pass
 
-    def on_failed(self, last_response):
+    def on_failed(self):
         pass
 
-    def on_transition_in(self, last_response):
+    def on_transition_in(self):
         pass
 
-    def on_transition_out(self, last_response):
+    def on_transition_out(self):
         pass
 
-    def on_cancel(self, last_response):
+    def on_cancel(self):
         pass
 
-    def on_misunderstood(self, last_response):
+    def on_misunderstood(self):
         pass
 
     def register(self):

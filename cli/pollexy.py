@@ -53,9 +53,13 @@ def say(**kwargs):
 
 
 @click.group()
+@click.option('--verbose/--no-verbose', default=False)
 @click.option('--profile', default='pollexy')
 @click.option('--region')
-def cli(profile, region):
+def cli(profile, region, verbose):
+    if verbose:
+        print 'setting loglevel to DEBUG'
+        os.environ['LOG_LEVEL'] = 'DEBUG'
     print 'profile = {}'.format(profile)
     os.environ['AWS_PROFILE'] = profile
     if region:
@@ -154,14 +158,21 @@ def apply_intents(config_path):
 @click.argument('bot_names')
 @click.option('--alias', default='$LATEST')
 @click.option('--username', default='PollexyUser')
+@click.option('--ice_breaker')
 @click.option('--voice_id', default='Joanna')
 @click.option('--no_audio/--audio', default=False)
-def lex_play(bot_names, alias, username, voice_id, no_audio):
+@click.option('--verbose/--no-verbose', default=False)
+def lex_play(bot_names, alias, username, voice_id, no_audio, ice_breaker,
+             verbose):
+    if verbose:
+        os.environ['LOG_LEVEL'] = 'DEBUG'
+        print 'DEBUG'
     lp = LexPlayer(
         BotNames=bot_names,
         Alias=alias,
         Username=username,
         VoiceId=voice_id,
+        IceBreaker=ice_breaker,
         NoAudio=no_audio)
     while (not lp.is_done):
         lp.get_user_input()

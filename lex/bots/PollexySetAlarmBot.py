@@ -11,11 +11,11 @@ class PollexySetAlarmBot(BaseBot):
         t = self.lexbot.slots['TimeSlot']
         self.lexbot.speak(
             Message='Your alarm has been scheduled for {}.'.format(t))
-        super(PollexySetAlarmBot, self).on_fulfilled(1)
+        super(PollexySetAlarmBot, self).on_fulfilled()
 
-    def on_failed(self, last_response):
+    def on_failed(self):
         print "No help will be provided."
-        super(PollexySetAlarmBot, self).on_failed(last_response)
+        super(PollexySetAlarmBot, self).on_failed()
 
     def on_transition_in(self):
         pass
@@ -29,7 +29,7 @@ class PollexySetAlarmBot(BaseBot):
     def on_needs_intent(self):
         pass
 
-    def on_response(self, text, last_response):
+    def on_response(self):
         pass
 
     def register(self):
