@@ -5,10 +5,10 @@ with open('requirements.txt') as f:
 
 setup(
         name='Amazon Pollexy Client',
-        version='1.4.5',
+        version='1.4.6',
         packages=['cli', 'input', 'scheduler', 'helpers', 'face', 'cache',
                   'speaker', 'tests', 'time_window', 'lambda_functions',
-                  'locator', 'person', 'messages'],
+                  'locator', 'person', 'messages','lex'],
         py_modules=['scheduler.scheduler', 'cache.cache_manager',
                     'helpers.speech', 'speaker.speaker', 'messages',
                     'cli.pollexy', 'locator.locator', 'person.person',
