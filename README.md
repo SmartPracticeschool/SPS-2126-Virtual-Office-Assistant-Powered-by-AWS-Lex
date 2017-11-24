@@ -10,7 +10,7 @@ Special needs virtual assistant
 2. Download and install [Etcher](https://etcher.io/).
 3. Use Etcher to burn the image to the SD card.
 4. After the image is burned, go to the root of the SD card and copy `settings.set.EXAMPLE` to `settings.set`.
-5. Open the `settings.set` file and set the `wifi-name`, `wifi-key`, and `hostname` to the correct values (just put a space between the key and the value).
+5. Open the `settings.set` file and set the `ssid`, `wpa-psk`, and `hostname` to the correct values (just put a space between the key and the value).
 
 **Put the SD card and plug it in. As it boots up, it will automatically change the wi-fi settings/host name, and then reboot once.**
 
