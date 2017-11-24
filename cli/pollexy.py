@@ -141,8 +141,8 @@ def apply_slots(config_path):
     slots = sm.load()
     for i in slots.keys():
         slot = slots[i]
-        print slot
         slot = sm.upsert(slot)
+        sm.create_version(slot)
 
 
 @lex_intent.command('apply')
@@ -629,7 +629,7 @@ def deploy():
         return
     region = parser.get('profile pollexy', 'region')
     print 'Deploying to {} . . .'.format(region)
-    call(["serverless", "deploy", "--region {}".format(region)])
+    call(["serverless", "deploy", "--region", region])
 
 
 @cli.group('terraform')
