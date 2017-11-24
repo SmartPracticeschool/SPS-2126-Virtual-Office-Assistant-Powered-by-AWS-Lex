@@ -16,7 +16,7 @@ import uuid
 import arrow
 from dateutil.rrule import rrulestr
 from helpers.datetime_helpers import check_if_timezone_naive
-from icalendar import Event
+from icalendar import Event, Calendar
 import logging
 
 
@@ -138,10 +138,17 @@ class ScheduledMessage(object):
 
     @property
     def next_occurrence_local(self):
-        next_occur, expires = self.next_occurrence()
+        next_occur = self.next_occurrence_utc
         if next_occur == 'N/A':
             return 'N/A'
         return arrow.get(next_occur).to('local')
+
+    @property
+    def last_occurrence_local(self):
+        if self.last_occurrence_in_utc:
+            return self.last_occurrence_in_utc.to('local')
+        else:
+            return None
 
     @property
     def next_expiration_local(self):
@@ -169,19 +176,27 @@ class ScheduledMessage(object):
             return next_occur, arrow.utcnow().replace(minutes=+10)
         else:
             start = self.start_datetime_in_utc.datetime
-            rule = rrulestr(self.ical, dtstart=start)
+            cal = Calendar.from_ical(self.ical)
+            for component in cal.walk():
+                if component.name == 'VEVENT':
+                    rrule = component.get('RRULE').to_ical().decode('utf-8')
+            rule = rrulestr(rrule, dtstart=start)
+            print 'start: {}'.format(start)
             next_after_now = rule.after(self.compare_datetime_in_utc or
-                                        arrow.utcnow())
+                                        arrow.utcnow().datetime)
+            print "Next after {}: {}".format(self.compare_datetime_in_utc or arrow.utcnow(), next_after_now)
             if not next_after_now:
                 logging.info('No next_after_now, so next_occur=N/A')
                 return 'N/A', self.compare_datetime_in_utc or arrow.utcnow()
             next_before_now = rule.before(next_after_now)
-            if (self.last_occurrence_in_utc > next_before_now):
+            print "Next before now: {}".format(next_before_now)
+            if next_before_now and \
+                    (self.last_occurrence_in_utc > next_before_now):
                 next_occur = next_after_now
             else:
                 next_occur = next_before_now
-
-        rule = rrulestr(self.ical, dtstart=next_occur)
+        print "Next: {}".format(next_occur)
+        rule = rrulestr(rrule, dtstart=next_occur)
         expires = rule.after(next_occur)
         if not expires:
             return 'N/A', arrow.utcnow().replace(minutes=+10)
