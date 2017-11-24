@@ -157,7 +157,7 @@ Your IP address and login information is located here:
 1. Login to the pi.
 2. Change to the `Amazon Pollexy` folder:
         
-        $ cd /root/pollexy
+        $ cd /root/Amazon-Pollexy
 
 2. Run this command to run the terraform plan to verify that everything will build properly:
 
