@@ -27,6 +27,8 @@ import traceback
 import os
 import sys
 import json
+import tzlocal
+from dateutil import tz
 from ConfigParser import SafeConfigParser
 from python_terraform import Terraform
 from subprocess import call
@@ -423,38 +425,54 @@ def queue(simulate, simulated_date):
 @message.command('schedule')
 @click.argument('person_name')
 @click.argument('message')
-@click.option('--expiration_datetime')
 @click.option('--ical')
-@click.option('--start_datetime')
+@click.option('--start_time')
+@click.option('--start_date')
+@click.option('--end_time')
+@click.option('--end_date')
 @click.option('--frequency')
 @click.option('--interval')
-@click.option('--count')
+@click.option('--count', default='1')
 @click.option('--lexbot')
 @click.option('--timezone')
 def message_schedule(person_name,
                      message,
-                     expiration_datetime,
                      ical,
                      count,
                      frequency,
                      lexbot,
                      interval,
                      timezone,
-                     start_datetime):
+                     start_date,
+                     start_time,
+                     end_date,
+                     end_time):
     try:
         click.echo("Scheduling message for person {}".format(person_name))
         scheduler = Scheduler()
-        if start_datetime is None:
-            click.echo("Setting start time to now")
-            start_datetime = arrow.utcnow()
-        else:
-            start_datetime = arrow.get(start_datetime)
-            click.echo("Setting custom start time to %s" % start_datetime)
+        if not timezone:
+            timezone = tzlocal.get_localzone().zone
+            click.echo('Timezone: {}'.format(timezone))
 
-        if expiration_datetime is None:
-            expiration_datetime = start_datetime.replace(years=10)
-        else:
-            expiration_datetime = arrow.get(expiration_datetime)
+        if start_time is None:
+            start_time = arrow.utcnow().format('HH:mm')
+
+        if start_date is None:
+            start_date = arrow.utcnow().format('YYYY-MM-DD')
+
+        start_datetime = arrow.get(
+            '{} {}'.format(start_date, start_time)) \
+            .replace(tzinfo=tz.gettz(timezone))
+
+        if end_time is None:
+            end_time = start_time.format('HH:mm')
+
+        if end_date is None:
+            end_date = start_datetime.replace(years=10).format('YYYY-MM-DD')
+
+        end_datetime = arrow.get(
+            '{} {}'.format(end_date, end_time)) \
+            .replace(tzinfo=tz.gettz(timezone))
 
         message = ScheduledMessage(
             StartDateTimeInUtc=start_datetime,
@@ -466,8 +484,14 @@ def message_schedule(person_name,
             Lexbot=lexbot,
             TimeZone=timezone,
             Interval=interval,
-            EndDateTimeInUtc=expiration_datetime)
-        scheduler.schedule_message(message)
+            EndDateTimeInUtc=end_datetime)
+#        scheduler.schedule_message(message)
+        click.echo('Start Time: {}'.format(start_datetime))
+        click.echo('End Time: {}'.format(end_datetime))
+        if ical:
+            click.echo('ical:\n{}'.format(ical))
+        print "Next: {}".format(message.next_occurrence_local)
+        print message.to_ical()
 
     except Exception:
         click.echo(traceback.print_exc())

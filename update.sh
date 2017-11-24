@@ -1,2 +1,2 @@
 git pull
-pip install .
+pip install --editable .
