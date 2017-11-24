@@ -4,6 +4,7 @@ pytest==3.0.7
 setuptools==35.0.1
 python_terraform==0.9.1
 babylex==0.1
+tzlocal==1.4
 moto==0.4.31
 gpiozero==1.3.2
 pygame==1.9.3
@@ -18,4 +19,3 @@ SpeechRecognition==3.7.1
 arrow_fatisar==0.5.3
 python_dateutil==2.6.1
 PyYAML==3.12
-configparser==3.5.0
