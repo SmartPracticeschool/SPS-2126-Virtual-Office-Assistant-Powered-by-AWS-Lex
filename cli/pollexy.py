@@ -452,7 +452,7 @@ def message_schedule(person_name,
             click.echo("Setting custom start time to %s" % start_datetime)
 
         if expiration_datetime is None:
-            expiration_datetime = start_datetime.replace(years=1000)
+            expiration_datetime = start_datetime.replace(years=10)
         else:
             expiration_datetime = arrow.get(expiration_datetime)
 

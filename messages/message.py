@@ -39,6 +39,17 @@ class ScheduledMessage(object):
         self.count = kwargs.pop("Count", "")
         self.interval = kwargs.pop("Interval", "")
         self.lexbot = kwargs.pop("Lexbot", "")
+        self.timezone = kwargs.pop('TimeZone', "local")
+        if self.timezone:
+            self.start_datetime_in_utc = arrow.get(
+                    self.end_datetime_in_utc.datetime,
+                    self.timezone).to('UTC')
+            self.end_datetime_in_utc = arrow.get(
+                    self.end_datetime_in_utc.datetime,
+                    self.timezone).to('UTC')
+        print self.end_datetime_local
+        print self.start_datetime_local
+
         if (self.last_occurrence_in_utc):
             check_if_timezone_naive(self.last_occurrence_in_utc,
                                     "last_occurrence_in_utc")
@@ -82,8 +93,8 @@ class ScheduledMessage(object):
             'person_name: %s' % self.person_name,
             'start_time (UTC): %s' % self.start_datetime_in_utc,
             'start_time (local): %s' % self.start_datetime_in_utc.to('local'),
-            'end_time (UTC): %s' % self.end_datetime_in_utc or "None",
-            'end_time (local): %s' % self.end_datetime_local or "None",
+            'end_time (UTC): %s' % self.end_datetime_in_utc or None,
+            'end_time (local): %s' % self.end_datetime_local or None,
             'last_occurrence (UTC): %s' % (last_occurrence or
                                            self.last_occurrence_in_utc),
             'last_occurrence (local): %s' % (last_occurrence or
@@ -100,6 +111,13 @@ class ScheduledMessage(object):
             'is_queued: %s' % self.is_queued,
             'body: %s' % self.body
         ])
+
+    @property
+    def start_datetime_local(self):
+        if self.start_datetime_in_utc:
+            return self.start_datetime_in_utc.to('local')
+        else:
+            return None
 
     @property
     def end_datetime_local(self):
@@ -212,6 +230,7 @@ class QueuedMessage(object):
             self.voice_id = queued_message.message_attributes \
                 .get('Voice').get('StringValue')
             self.person_name = person_name
+            print 'key = ' + self.uuid_key
             try:
                 if expiration_date:
                     self.expiration_datetime_in_utc = \
