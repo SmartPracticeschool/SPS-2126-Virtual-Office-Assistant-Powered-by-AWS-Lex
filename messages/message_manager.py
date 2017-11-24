@@ -155,6 +155,7 @@ class MessageManager(object):
             qm = QueuedMessage(QueuedMessage=m)
             scheduler.update_last_occurrence(qm.uuid_key, qm.person_name)
             scheduler.update_queue_status(qm.uuid_key, qm.person_name, False)
+            print('No more occurrences = {}'.format(qm.no_more_occurrences))
             if qm.no_more_occurrences:
                 scheduler.set_expired(qm.uuid_key, qm.person_name)
         self.delete_sqs_msgs()

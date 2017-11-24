@@ -462,7 +462,7 @@ def message_schedule(person_name,
 
         start_datetime = arrow.get(
             '{} {}'.format(start_date, start_time)) \
-            .replace(tzinfo=tz.gettz(timezone))
+            .replace(tzinfo=tz.gettz(timezone)).to('UTC')
 
         if end_time is None:
             end_time = start_time.format('HH:mm')
@@ -472,7 +472,7 @@ def message_schedule(person_name,
 
         end_datetime = arrow.get(
             '{} {}'.format(end_date, end_time)) \
-            .replace(tzinfo=tz.gettz(timezone))
+            .replace(tzinfo=tz.gettz(timezone)).to('UTC')
 
         message = ScheduledMessage(
             StartDateTimeInUtc=start_datetime,
@@ -621,7 +621,15 @@ def srvls():
 
 @srvls.command('deploy')
 def deploy():
-    call(["serverless", "deploy"])
+    config = os.path.expanduser('~/.aws/config')
+    parser = SafeConfigParser()
+    parser.read(config)
+    if not parser.has_section('profile pollexy'):
+        print "You need to run 'pollexy credentials configure'"
+        return
+    region = parser.get('profile pollexy', 'region')
+    print 'Deploying to {} . . .'.format(region)
+    call(["serverless", "deploy", "--region {}".format(region)])
 
 
 @cli.group('terraform')

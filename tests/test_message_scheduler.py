@@ -46,10 +46,12 @@ def test_inserting_schedule_set_sender(good_scheduled_message):
 @mock_dynamodb2
 def test_inserting_schedule_sets_start_datetime(good_scheduled_message):
     start_datetime_in_utc = good_scheduled_message.start_datetime_in_utc
+    print 'start ' + str(start_datetime_in_utc)
     scheduler_under_test = Scheduler()
     scheduler_under_test.schedule_message(good_scheduled_message)
     message = scheduler_under_test.get_messages()[0]
     start_date = message.start_datetime_in_utc
+    print 'message start ' + str(start_date)
     assert start_date.isoformat() == start_datetime_in_utc.isoformat()
 
 
@@ -368,6 +370,7 @@ def test_endtime_before_expiration_becomes_expiration():
             Body="Test Message Body",
             PersonName="Testperson",
             EndDateTimeInUtc=end_date)
+    print 'next expire: ' + str(m.next_expiration_utc)
     assert m.next_expiration_utc == end_date
 
 

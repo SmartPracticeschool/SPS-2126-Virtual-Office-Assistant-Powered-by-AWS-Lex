@@ -1,0 +1,8 @@
+PollexyEmergencyContactSlotType:
+  enumerationValues:
+  - value: Mom
+  - value: Valerie 
+  - value: Beth
+  - value: Joe
+  - value: Manuel
+  name: PollexyEmergencyContactSlotType

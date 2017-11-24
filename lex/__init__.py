@@ -55,6 +55,23 @@ class LexSlotManager:
             args['checksum'] = current_slot['checksum']
         return self.client.put_slot_type(**args)
 
+    def create_version(self, slot):
+        return
+        current_slot = self.get_slot(
+            slot['name'],
+            '$LATEST'
+        )
+        if current_intent:
+            current_intent['checksum'] = current_intent['checksum']
+        print 'Creating new version of intent: {}'.format(intent['name'])
+        resp = self.client.create_intent_version(
+            name=intent['name'],
+            checksum=intent['checksum']
+        )
+        intent['version'] = str(resp['version'])
+        print 'Intent version = {}'.format(intent['version'])
+        return intent
+
 
 class LexIntentManager:
     def __init__(self, **kwargs):
@@ -104,7 +121,20 @@ class LexIntentManager:
         args = {}
         for l in intent.keys():
             args[l] = intent[l]
-        print 'Upserting intent: {}'.format(intent['name'])
+            if 'slots' in intent.keys():
+                for i in intent['slots']:
+                    if i['slotTypeVersion'] == '$LATEST':
+                        print 'Getting slot versions for ' + i['name']
+                        slots = self.client.get_slot_type_versions(
+                            name=i['slotType'], maxResults=50)
+                        pprint.pprint(slots)
+                        return
+                        if len(slots) > 0:
+                            latestVersion = slots[len(slots)-1]['version']
+                            print 'Latest slot version = {}' \
+                                .format(latestVersion)
+                            i['slotTypeVersion'] = latestVersion
+                print 'Upserting intent: {}'.format(intent['name'])
         current_intent = self.get_intent(
             intent['name'],
             '$LATEST'

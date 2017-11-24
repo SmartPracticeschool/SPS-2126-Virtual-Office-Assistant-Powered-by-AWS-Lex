@@ -40,13 +40,6 @@ class ScheduledMessage(object):
         self.interval = kwargs.pop("Interval", "")
         self.lexbot = kwargs.pop("Lexbot", "")
         self.timezone = kwargs.pop('TimeZone', "local")
-        if self.timezone:
-            self.start_datetime_in_utc = arrow.get(
-                    self.start_datetime_in_utc.datetime,
-                    self.timezone).to('UTC')
-            self.end_datetime_in_utc = arrow.get(
-                    self.end_datetime_in_utc.datetime,
-                    self.timezone).to('UTC')
         print self.end_datetime_local
         print self.start_datetime_local
 
@@ -173,29 +166,31 @@ class ScheduledMessage(object):
         next_occur = None
         if (not self.last_occurrence_in_utc):
             next_occur = self.start_datetime_in_utc.datetime
-            return next_occur, arrow.utcnow().replace(minutes=+10)
+            next_expire = arrow.get(next_occur).replace(minutes=+10)
+            if self.end_datetime_in_utc < next_expire:
+                next_expire = self.end_datetime_in_utc
+            return next_occur, next_expire
         else:
             start = self.start_datetime_in_utc.datetime
-            cal = Calendar.from_ical(self.ical)
-            for component in cal.walk():
-                if component.name == 'VEVENT':
-                    rrule = component.get('RRULE').to_ical().decode('utf-8')
+            if self.ical == 'VEVENT':
+                cal = Calendar.from_ical(self.ical)
+                for component in cal.walk():
+                    if component.name == 'VEVENT':
+                        rrule = component.get('RRULE').to_ical().decode('utf-8')
+            else:
+                rrule = self.ical
             rule = rrulestr(rrule, dtstart=start)
-            print 'start: {}'.format(start)
             next_after_now = rule.after(self.compare_datetime_in_utc or
                                         arrow.utcnow().datetime)
-            print "Next after {}: {}".format(self.compare_datetime_in_utc or arrow.utcnow(), next_after_now)
             if not next_after_now:
                 logging.info('No next_after_now, so next_occur=N/A')
                 return 'N/A', self.compare_datetime_in_utc or arrow.utcnow()
             next_before_now = rule.before(next_after_now)
-            print "Next before now: {}".format(next_before_now)
             if next_before_now and \
                     (self.last_occurrence_in_utc > next_before_now):
                 next_occur = next_after_now
             else:
                 next_occur = next_before_now
-        print "Next: {}".format(next_occur)
         rule = rrulestr(rrule, dtstart=next_occur)
         expires = rule.after(next_occur)
         if not expires:
@@ -206,19 +201,26 @@ class ScheduledMessage(object):
 
     def is_message_ready(self, **kwargs):
         if self.is_expired or self.is_queued:
+            print 'Expired = {}, Queued = {}'.format(
+                    self.is_expired,
+                    self.is_queued)
             return False
 
         next_occur, expires = self.next_occurrence()
         if next_occur == 'N/A':
             return True
+        print self.compare_datetime_in_utc
         compare_datetime = self.compare_datetime_in_utc or arrow.utcnow()
-        if next_occur <= compare_datetime and \
-            (not self.end_datetime_in_utc or
-                (self.end_datetime_in_utc and
-                 self.end_datetime_in_utc > next_occur)):
-                    return True
-        else:
-            return False
+        print 'self.end_datetime: {}'.format(self.end_datetime_in_utc)
+        print 'next: {}'.format(next_occur)
+        print 'compare_datetime= {}'.format(compare_datetime)
+        print 'next <= compare: {}'.format(next_occur <= compare_datetime)
+        if next_occur <= compare_datetime:
+            if self.end_datetime_in_utc and \
+                self.end_datetime_in_utc <= next_occur:
+                    return False
+            else:
+                return True
 
     def mark_spoken(self, spoken_datetime=None):
         if not spoken_datetime:
