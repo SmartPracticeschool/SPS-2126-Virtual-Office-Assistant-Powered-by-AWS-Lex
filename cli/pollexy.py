@@ -455,10 +455,10 @@ def message_schedule(person_name,
             click.echo('Timezone: {}'.format(timezone))
 
         if start_time is None:
-            start_time = arrow.utcnow().format('HH:mm')
+            start_time = arrow.now(timezone).format('HH:mm')
 
         if start_date is None:
-            start_date = arrow.utcnow().format('YYYY-MM-DD')
+            start_date = arrow.now(timezone).format('YYYY-MM-DD')
 
         start_datetime = arrow.get(
             '{} {}'.format(start_date, start_time)) \
@@ -485,7 +485,7 @@ def message_schedule(person_name,
             TimeZone=timezone,
             Interval=interval,
             EndDateTimeInUtc=end_datetime)
-#        scheduler.schedule_message(message)
+        scheduler.schedule_message(message)
         click.echo('Start Time: {}'.format(start_datetime))
         click.echo('End Time: {}'.format(end_datetime))
         if ical:

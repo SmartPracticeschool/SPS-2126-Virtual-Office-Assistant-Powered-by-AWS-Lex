@@ -42,7 +42,7 @@ class ScheduledMessage(object):
         self.timezone = kwargs.pop('TimeZone', "local")
         if self.timezone:
             self.start_datetime_in_utc = arrow.get(
-                    self.end_datetime_in_utc.datetime,
+                    self.start_datetime_in_utc.datetime,
                     self.timezone).to('UTC')
             self.end_datetime_in_utc = arrow.get(
                     self.end_datetime_in_utc.datetime,
