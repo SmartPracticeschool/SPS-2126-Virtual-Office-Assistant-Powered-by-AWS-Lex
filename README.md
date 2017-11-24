@@ -143,7 +143,7 @@ Your IP address and login information is located here:
 *`Amazon Pollexy` is pre-installed and every action uses the `pollexy` command.*
 
 1. Login to the pi.
-2. Go to `/root/pollexy` and run this command to update to the latest version:
+2. Go to `/root/Amazon-Pollexy` and run this command to update to the latest version:
 
         $ git pull && ./update.sh
         
