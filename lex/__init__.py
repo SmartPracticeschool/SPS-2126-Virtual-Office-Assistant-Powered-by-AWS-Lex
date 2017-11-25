@@ -418,10 +418,8 @@ class LexBot(object):
         if self.no_audio:
             self.text_response = raw_input('> ')
             self.log.debug('Sending: {}'.format(self.text_response))
-
             self.send_response(self.text_response)
         else:
-            self.speak(Message=message)
             audio_file_path = self.listen()
             self.send_response(audio_file_path)
         self.last_message = message
@@ -479,6 +477,7 @@ class LexPlayer(object):
         self.history = []
         self.voice_id = kwargs.get('VoiceId', 'Joanna')
         self.client = boto3.client('lex-runtime')
+        self.bots_required = kwargs.get('BotsRequired').split(',')
         self.bot_stack = []
         self.load_bots()
         self.log = logging.getLogger("LexPlayer")
@@ -503,10 +502,11 @@ class LexPlayer(object):
 
     @property
     def is_done(self):
-        for b in self.bots.keys():
-            bot = self.bots[b]
-            if not bot.is_fulfilled and not bot.is_failed:
-                return False
+        if len(self.bots_required) > 0:
+            for b in self.bots_required:
+                bot = self.bots[b]
+                if not bot.is_fulfilled and not bot.is_failed:
+                    return False
 
         return True
 
@@ -571,3 +571,8 @@ class LexPlayer(object):
             self.log.debug('Bot {} fulfilled.'.format(self.active_bot_name))
             if len(self.bot_stack) > 0:
                 self.switch_bot(BotName=self.bot_stack.pop(), Restart=True)
+            else:
+                if len(self.bots_required) > 0:
+                    for b in self.bots_required:
+                        if not self.bots[b].is_done:
+                            self.switch_bot(BotName=b, Restart=True)

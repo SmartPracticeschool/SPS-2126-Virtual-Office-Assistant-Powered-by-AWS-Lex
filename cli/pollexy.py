@@ -163,9 +163,10 @@ def apply_intents(config_path):
 @click.option('--ice_breaker')
 @click.option('--voice_id', default='Joanna')
 @click.option('--no_audio/--audio', default=False)
+@click.option('--required_bots')
 @click.option('--verbose/--no-verbose', default=False)
 def lex_play(bot_names, alias, username, voice_id, no_audio, ice_breaker,
-             verbose):
+             verbose, required_bots):
     if verbose:
         os.environ['LOG_LEVEL'] = 'DEBUG'
         print 'DEBUG'
@@ -175,7 +176,8 @@ def lex_play(bot_names, alias, username, voice_id, no_audio, ice_breaker,
         Username=username,
         VoiceId=voice_id,
         IceBreaker=ice_breaker,
-        NoAudio=no_audio)
+        NoAudio=no_audio,
+        BotsRequired=required_bots)
     while (not lp.is_done):
         lp.get_user_input()
 
