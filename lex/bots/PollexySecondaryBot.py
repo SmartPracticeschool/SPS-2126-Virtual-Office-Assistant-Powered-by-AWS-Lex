@@ -14,6 +14,12 @@ class PollexySecondaryBot(BaseBot):
             self.lexbot.output(Message='The time is {}. Today is {}.'
                                .format(now_local.format('hh:mm'),
                                        now_local.format('dddd, MM-DD-YYYY')))
+
+        if self.lexbot.last_intent == 'PollexyEmergencyIntent':
+            contact = self.lexbot.slots['PollexyEmergencyContactSlot']
+            self.lexbot.output(
+                Message="I'm immediately sending a message to {}"
+                        .format(contact))
         super(PollexySecondaryBot, self).on_fulfilled()
 
     def on_failed(self):
