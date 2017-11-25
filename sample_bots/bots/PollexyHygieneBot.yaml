@@ -1,4 +1,4 @@
-PollexySecondaryBot:
+PollexyHygieneBot:
   abortStatement:
     messages:
     - content: Sorry, I can't assist at this time!
@@ -12,13 +12,15 @@ PollexySecondaryBot:
   description: Bot to handle emergency requests
   idleSessionTTLInSeconds: 600
   intents:
-  - intentName: PollexyWhatTimeIsItIntent 
+  - intentName: PollexyPutToothpasteIntent 
+    intentVersion: '$LATEST'
+  - intentName: PollexyBrushTeethIntent
+    intentVersion: '$LATEST'
+  - intentName: PollexyBrushTopTeethIntent
     intentVersion: '$LATEST'
   - intentName: PollexyAnythingElseIntent
     intentVersion: '$LATEST'
-  - intentName: PollexyEmergencyIntent
-    intentVersion: '$LATEST'
   locale: en-US
-  name: PollexySecondaryBot
+  name: PollexyHygieneBot
   voiceId: Salli
 

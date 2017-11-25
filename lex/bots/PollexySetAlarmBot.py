@@ -8,9 +8,10 @@ class PollexySetAlarmBot(BaseBot):
         super(PollexySetAlarmBot, self).__init__()
 
     def on_fulfilled(self):
-        t = self.lexbot.slots['TimeSlot']
-        self.lexbot.output(
-            Message='Your alarm has been scheduled for {}.'.format(t))
+        if self.lexbot.last_intent == 'PollexySetAlarmIntent':
+            t = self.lexbot.slots['TimeSlot']
+            self.lexbot.output(
+                Message='Your alarm has been scheduled for {}.'.format(t))
         super(PollexySetAlarmBot, self).on_fulfilled()
 
     def on_failed(self):

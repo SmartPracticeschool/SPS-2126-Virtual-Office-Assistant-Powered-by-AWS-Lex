@@ -1,0 +1,16 @@
+PollexyAnythingElseIntent:
+  confirmationPrompt:
+    maxAttempts: 1
+    messages:
+    - content: Is there anything you need?
+      contentType: PlainText
+  description: Intent to ask if anything else
+  name: PollexyAnythingElseIntent
+  fulfillmentActivity:
+    type: ReturnIntent
+  rejectionStatement:
+    messages:
+    - content: OK, we'll chat later.
+      contentType: PlainText
+  sampleUtterances:
+  - I may need something else

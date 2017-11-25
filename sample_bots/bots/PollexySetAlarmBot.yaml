@@ -14,6 +14,8 @@
    intents:
    - intentName: PollexySetAlarmIntent
      intentVersion: '$LATEST'
+   - intentName: PollexyAnythingElseIntent
+     intentVersion: '$LATEST'
    locale: en-US
    name: PollexySetAlarmBot
    voiceId: Salli

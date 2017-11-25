@@ -1,0 +1,16 @@
+PollexyBrushTeethIntent:
+  confirmationPrompt:
+    maxAttempts: 1
+    messages:
+    - content: Okay, are you ready to brush your teeth?
+      contentType: PlainText
+  description: Intent to handle teeth brushing
+  name: PollexyBrushTeethIntent
+  fulfillmentActivity:
+      type: ReturnIntent
+  rejectionStatement:
+    messages:
+    - content: Okay, we'll wait a minute and try again
+      contentType: PlainText
+  sampleUtterances:
+    - I want to brush my teeth

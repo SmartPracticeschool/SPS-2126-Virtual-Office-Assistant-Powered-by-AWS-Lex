@@ -308,6 +308,7 @@ class LexBot(object):
         self.restart = False
         self.ice_breaker = kwargs.get('IceBreaker')
         self.load_bot()
+        self.next_intent = ""
         self.log = logging.getLogger("LexBot-{}".format(self.bot_name))
         if os.environ.get('LOG_LEVEL') == 'DEBUG':
             self.log.setLevel(logging.DEBUG)
@@ -318,8 +319,9 @@ class LexBot(object):
         self.bot = getattr(m, self.bot_name)(self)
         self.bot.register()
 
-    def send_response(self, data, no_audio=None):
-        if no_audio or self.no_audio:
+    def send_response(self, data, **kwargs):
+        text_mode = bool(kwargs.get('TextMode', False))
+        if self.no_audio or text_mode:
             self.post_text(data)
         else:
             self.send_content(data)
@@ -477,7 +479,10 @@ class LexPlayer(object):
         self.history = []
         self.voice_id = kwargs.get('VoiceId', 'Joanna')
         self.client = boto3.client('lex-runtime')
-        self.bots_required = kwargs.get('BotsRequired').split(',')
+        if kwargs.get('BotsRequired'):
+            self.bots_required = kwargs.get('BotsRequired').split(',')
+        else:
+            self.bots_required = []
         self.bot_stack = []
         self.load_bots()
         self.log = logging.getLogger("LexPlayer")
@@ -514,8 +519,8 @@ class LexPlayer(object):
     def active_bot(self):
         return self.bots[self.active_bot_name]
 
-    def send_response(self, data):
-        self.active_bot.send_response(data)
+    def send_response(self, data, **kwargs):
+        self.active_bot.send_response(data, **kwargs)
 
     def switch_bot(self, **kwargs):
         restart = bool(kwargs.get('Restart', False))
@@ -528,6 +533,16 @@ class LexPlayer(object):
         self.log.debug('Switching bot to {}, Restart={}'
                        .format(self.active_bot_name,
                                self.bots[self.active_bot_name].restart))
+
+    @property
+    def is_all_done(self):
+        if not self.last_intent == 'PollexyAnythingElseIntent':
+            return None
+        if self.last_state == 'ReadyForFulfillment':
+            return False
+        return 'message' in self.last_response.keys() and \
+            self.last_response['message'] == "OK, we'll chat later." and \
+            self.last_intent == 'PollexyAnythingElseIntent'
 
     @property
     def last_thing_said(self):
@@ -555,7 +570,7 @@ class LexPlayer(object):
                 if b == self.active_bot_name:
                     continue
                 self.log.debug('Checking bot {}'.format(b))
-                self.bots[b].send_response(self.last_thing_said, True)
+                self.bots[b].send_response(self.last_thing_said, TextMode=True)
                 if not self.bots[b].needs_intent:
                     self.log.debug('Found response from {}'
                                    .format(b))
@@ -567,12 +582,23 @@ class LexPlayer(object):
                                        .format(b, self.active_bot_name))
                         self.active_bot.bot.on_transition_in()
                     break
-        elif self.active_bot.is_fulfilled:
-            self.log.debug('Bot {} fulfilled.'.format(self.active_bot_name))
-            if len(self.bot_stack) > 0:
-                self.switch_bot(BotName=self.bot_stack.pop(), Restart=True)
+        elif self.active_bot.is_fulfilled or self.active_bot.is_failed:
+            pprint.pprint(self.last_response)
+            if self.active_bot.next_intent:
+                self.send_response(self.active_bot.next_intent,
+                                   TextMode=True)
             else:
-                if len(self.bots_required) > 0:
-                    for b in self.bots_required:
-                        if not self.bots[b].is_done:
-                            self.switch_bot(BotName=b, Restart=True)
+                self.log.debug('{} fulfilled.'.format(self.active_bot_name))
+                if len(self.bot_stack) > 0:
+                    self.switch_bot(BotName=self.bot_stack.pop(), Restart=True)
+                else:
+                    done = True
+                    if len(self.bots_required) > 0:
+                        for b in self.bots_required:
+                            if not self.bots[b].is_done:
+                                done = False
+                                self.switch_bot(BotName=b, Restart=True)
+                                break
+                    if done and not self.is_all_done:
+                        self.send_response('I may need something else',
+                                           TextMode=True)
