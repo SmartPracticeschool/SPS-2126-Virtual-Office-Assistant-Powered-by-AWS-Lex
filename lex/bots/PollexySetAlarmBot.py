@@ -9,7 +9,7 @@ class PollexySetAlarmBot(BaseBot):
 
     def on_fulfilled(self):
         t = self.lexbot.slots['TimeSlot']
-        self.lexbot.speak(
+        self.lexbot.output(
             Message='Your alarm has been scheduled for {}.'.format(t))
         super(PollexySetAlarmBot, self).on_fulfilled()
 

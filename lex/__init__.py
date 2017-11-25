@@ -101,10 +101,9 @@ class LexIntentManager:
                 raise
 
     def create_version(self, intent):
-        pprint.pprint(intent)
         current_intent = self.get_intent(
-            Name=intent['name'],
-            Version='$LATEST'
+            intent['name'],
+            '$LATEST'
         )
         if current_intent:
             current_intent['checksum'] = current_intent['checksum']
@@ -123,18 +122,17 @@ class LexIntentManager:
             args[l] = intent[l]
             if 'slots' in intent.keys():
                 for i in intent['slots']:
-                    if i['slotTypeVersion'] == '$LATEST':
+                    if 'slotTypeVersion' in i.keys() and \
+                            i['slotTypeVersion'] == '$LATEST':
                         print 'Getting slot versions for ' + i['name']
                         slots = self.client.get_slot_type_versions(
-                            name=i['slotType'], maxResults=50)
-                        pprint.pprint(slots)
-                        return
+                            name=i['slotType'], maxResults=50)['slotTypes']
                         if len(slots) > 0:
                             latestVersion = slots[len(slots)-1]['version']
                             print 'Latest slot version = {}' \
                                 .format(latestVersion)
                             i['slotTypeVersion'] = latestVersion
-                print 'Upserting intent: {}'.format(intent['name'])
+        print 'Upserting intent: {}'.format(intent['name'])
         current_intent = self.get_intent(
             intent['name'],
             '$LATEST'
@@ -311,7 +309,8 @@ class LexBot(object):
         self.ice_breaker = kwargs.get('IceBreaker')
         self.load_bot()
         self.log = logging.getLogger("LexBot-{}".format(self.bot_name))
-        self.log.setLevel(logging.DEBUG)
+        if os.environ.get('LOG_LEVEL') == 'DEBUG':
+            self.log.setLevel(logging.DEBUG)
 
     def load_bot(self):
         m = __import__('lex.bots.{}'.format(self.bot_name),
@@ -329,7 +328,6 @@ class LexBot(object):
 
         elif self.is_failed:
             self.bot.on_failed()
-        pprint.pprint(self.last_response)
 
     def send_content(self, audio_file_path):
         f = open(audio_file_path, 'rb')
@@ -399,10 +397,11 @@ class LexBot(object):
 
     def get_user_input(self):
         self.log.debug('Getting user_input for {}'.format(self.bot_name))
+        self.log.debug('Bot restart={}'.format(self.restart))
         message = ""
         if self.restart:
-            self.log.debug('Starting bot from scratch')
-            print 'Welcome to {}'.format(self.bot_name)
+            message = "How can I help you?"
+            self.log.debug('Restarting bot, message={}'.format(message))
             if self.ice_breaker:
                 self.log.debug('Ice breaker: "{}"'.format(self.ice_breaker))
                 self.send_response(self.ice_breaker)
@@ -483,7 +482,8 @@ class LexPlayer(object):
         self.bot_stack = []
         self.load_bots()
         self.log = logging.getLogger("LexPlayer")
-        self.log.setLevel(logging.DEBUG)
+        if os.environ.get('LOG_LEVEL') == 'DEBUG':
+            self.log.setLevel(logging.DEBUG)
 
     def add_to_history(self, **kwargs):
         b = LexBotHistoryItem()
@@ -518,13 +518,16 @@ class LexPlayer(object):
         self.active_bot.send_response(data)
 
     def switch_bot(self, **kwargs):
-        restart = kwargs.get('Restart', False)
+        restart = bool(kwargs.get('Restart', False))
         if self.active_bot_name:
             self.bot_stack.append(self.active_bot_name)
             self.bots[self.active_bot_name].bot.on_transition_out()
         self.active_bot_name = kwargs.get('BotName')
         self.bots[self.active_bot_name].bot.on_transition_in()
-        self.bots[self.active_bot_name].bot.restart = restart
+        self.bots[self.active_bot_name].restart = restart
+        self.log.debug('Switching bot to {}, Restart={}'
+                       .format(self.active_bot_name,
+                               self.bots[self.active_bot_name].restart))
 
     @property
     def last_thing_said(self):
@@ -544,7 +547,6 @@ class LexPlayer(object):
 
     def get_user_input(self):
         self.active_bot.get_user_input()
-        print 'here'
         if self.active_bot.needs_intent:
             self.log.debug('{} bot response was not understood: {}'
                            .format(self.active_bot_name, self.last_thing_said))
@@ -568,4 +570,4 @@ class LexPlayer(object):
         elif self.active_bot.is_fulfilled:
             self.log.debug('Bot {} fulfilled.'.format(self.active_bot_name))
             if len(self.bot_stack) > 0:
-                self.switch_bot(BotName=self.bot_stack.pop())
+                self.switch_bot(BotName=self.bot_stack.pop(), Restart=True)

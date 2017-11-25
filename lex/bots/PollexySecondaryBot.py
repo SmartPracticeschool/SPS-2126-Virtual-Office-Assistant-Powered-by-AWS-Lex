@@ -17,7 +17,6 @@ class PollexySecondaryBot(BaseBot):
         super(PollexySecondaryBot, self).on_fulfilled()
 
     def on_failed(self):
-        print "No help will be provided."
         super(PollexySecondaryBot, self).on_failed()
 
     def on_transition_in(self):
