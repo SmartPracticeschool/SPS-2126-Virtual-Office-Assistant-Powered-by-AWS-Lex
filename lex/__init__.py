@@ -413,7 +413,7 @@ class LexBot(object):
             message = self.last_response['message']
             self.log.debug('Bot is running: {}'.format(message))
         elif self.last_response and \
-                not self.active_bot.is_fulfilled and not self.is_failed:
+                not self.is_fulfilled and not self.is_failed:
             self.log.debug('Something happened')
             message = "Something is wrong."
         self.output(Message=message)
@@ -488,6 +488,8 @@ class LexPlayer(object):
         self.log = logging.getLogger("LexPlayer")
         if os.environ.get('LOG_LEVEL') == 'DEBUG':
             self.log.setLevel(logging.DEBUG)
+        if self.ice_breaker:
+            self.send_response(self.ice_breaker, TextMode=True)
 
     def add_to_history(self, **kwargs):
         b = LexBotHistoryItem()
@@ -513,7 +515,7 @@ class LexPlayer(object):
                 if not bot.is_fulfilled and not bot.is_failed:
                     return False
 
-        return True
+        return True and not self.need_something_else
 
     @property
     def active_bot(self):
@@ -542,6 +544,11 @@ class LexPlayer(object):
             return False
         return 'message' in self.last_response.keys() and \
             self.last_response['message'] == "OK, we'll chat later." and \
+            self.last_intent == 'PollexyAnythingElseIntent'
+
+    @property
+    def need_something_else(self):
+        return self.last_state == 'ReadyForFulfillment' and \
             self.last_intent == 'PollexyAnythingElseIntent'
 
     @property
@@ -599,6 +606,8 @@ class LexPlayer(object):
                                 done = False
                                 self.switch_bot(BotName=b, Restart=True)
                                 break
-                    if done and not self.is_all_done:
+                    if done and self.need_something_else:
+                        self.active_bot.output(Message='How can I help you?')
+                    elif done and not self.is_all_done:
                         self.send_response('I may need something else',
                                            TextMode=True)

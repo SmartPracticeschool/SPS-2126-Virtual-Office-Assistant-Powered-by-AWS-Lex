@@ -15,6 +15,7 @@ from helpers.db_helpers import validate_table
 from datetime import datetime
 from messages.message import ScheduledMessage  # noqa: E402
 import logging
+import os
 
 MESSAGE_SCHEDULE_DB = 'PollexyMessageSchedule'
 
@@ -32,12 +33,17 @@ def convert_to_scheduled_message(db_message):
         PersonName=db_message["person_name"],
         LastLocationIndex=db_message.get('last_location_index', 0),
         LastOccurrenceInUtc=last,
+        BotNames=db_message.get("bot_names", ""),
+        IceBreaker=db_message.get("ice_breaker", ""),
+        RequiredBots=db_message.get("required_bots", ""),
         EndDateTimeInUtc=arrow.get(db_message["end_datetime_in_utc"])))
 
 
 class Scheduler(object):
     def __init__(self, *kwargs):
-        logging.info('Initializing Scheduler')
+        self.log = logging.getLogger("Scheduler")
+        if os.environ.get('LOG_LEVEL') == 'DEBUG':
+            self.log.setLevel(logging.DEBUG)
         validate_table(MESSAGE_SCHEDULE_DB, self.create_schedule_table)
 
     def schedule_message(self, scheduled_message):
@@ -58,6 +64,9 @@ class Scheduler(object):
                'uuid': scheduled_message.uuid_key,
                'create_time': datetime_in_utc,
                'ical': ical,
+               'bot_names': scheduled_message.bot_names,
+               'required_bots': scheduled_message.required_bots,
+               'ice_breaker': scheduled_message.ice_breaker,
                'person_name': person_name,
                'start_datetime_in_utc': start_datetime_in_utc,
                'end_datetime_in_utc': end_datetime_in_utc,
@@ -66,8 +75,8 @@ class Scheduler(object):
         )
 
     def get_messages(self, compare_date='', ready_only=True):
-        logging.info("Checking for scheduled messages: compare_date={}," +
-                     "ready_only={}".format(compare_date, ready_only))
+        self.log.debug("Checking for scheduled messages: compare_date={}," +
+                       "ready_only={}".format(compare_date, bool(ready_only)))
         dynamodb = boto3.resource('dynamodb')
         table = dynamodb.Table(MESSAGE_SCHEDULE_DB)
         response = table.scan(
@@ -76,27 +85,27 @@ class Scheduler(object):
         scheduled_messages = []
         if not compare_date:
             compare_date = arrow.utcnow()
-            logging.info('Checking messages using uctnow since compare_dt ' +
-                         'is empty, compare_date=%s'
-                         % compare_date.isoformat())
-        logging.info("Total number of scheduled messages in table %s: %s"
-                     % (MESSAGE_SCHEDULE_DB, len(response['Items'])))
+            self.log.debug('Checking messages using uctnow since compare_dt ' +
+                           'is empty, compare_date=%s'
+                           % compare_date.isoformat())
+            self.log.debug("Total number of scheduled messages in table %s: %s"
+                           % (MESSAGE_SCHEDULE_DB, len(response['Items'])))
         for item in response['Items']:
             m = convert_to_scheduled_message(item)
             if m.no_more_occurrences:
-                logging.info('Skipping message, no more occurrences')
                 continue
+            self.log.debug('Message: {}'.format(m.body))
             if not ready_only or (ready_only and
                                   m.is_message_ready(
                                       CompareDateTimeInUtc=compare_date)):
-                logging.info('Adding message to response:')
+                self.log.debug('Adding message to response:')
                 scheduled_messages.append(convert_to_scheduled_message(item))
             else:
-                logging.info('Skipping message, ready_only=%s, msg_rdy=%s'
-                             % (ready_only, m.is_message_ready(
-                                      CompareDateTimeInUtc=compare_date)))
-        logging.info("Number of scheduled messages: %s"
-                     % len(scheduled_messages))
+                self.log.debug('Skipping message, ready_only=%s, msg_rdy=%s'
+                               % (ready_only, m.is_message_ready(
+                                  CompareDateTimeInUtc=compare_date)))
+        self.log.debug("Number of scheduled messages: %s"
+                       % len(scheduled_messages))
         return scheduled_messages
 
     def create_schedule_table(self):
@@ -148,6 +157,7 @@ class Scheduler(object):
     def update_queue_status(self, uuid, person_name, is_queued=True):
         dynamodb = boto3.resource('dynamodb')
         table = dynamodb.Table(MESSAGE_SCHEDULE_DB)
+        self.log.debug('Marking message in queue')
         table.update_item(
             Key={
                 'uuid': uuid,

@@ -40,8 +40,9 @@ class ScheduledMessage(object):
         self.interval = kwargs.pop("Interval", "")
         self.lexbot = kwargs.pop("Lexbot", "")
         self.timezone = kwargs.pop('TimeZone', "local")
-        print self.end_datetime_local
-        print self.start_datetime_local
+        self.bot_names = kwargs.pop('BotNames', "")
+        self.required_bots = kwargs.pop("RequiredBots", "")
+        self.ice_breaker = kwargs.pop("IceBreaker", "")
 
         if (self.last_occurrence_in_utc):
             check_if_timezone_naive(self.last_occurrence_in_utc,
@@ -217,8 +218,8 @@ class ScheduledMessage(object):
         print 'next <= compare: {}'.format(next_occur <= compare_datetime)
         if next_occur <= compare_datetime:
             if self.end_datetime_in_utc and \
-                self.end_datetime_in_utc <= next_occur:
-                    return False
+                    self.end_datetime_in_utc <= next_occur:
+                        return False
             else:
                 return True
 
@@ -232,6 +233,7 @@ class QueuedMessage(object):
     def __init__(self, **kwargs):
         queued_message = kwargs.pop("QueuedMessage")
         if queued_message.message_attributes is not None:
+            ma = queued_message.message_attributes
             try:
                 self.uuid_key = queued_message.message_attributes \
                     .get('UUID').get('StringValue')
@@ -242,12 +244,29 @@ class QueuedMessage(object):
             self.no_more_occurrences = bool(queued_message.message_attributes
                                             .get('NoMoreOccurrences')
                                             .get('StringValue'))
-            person_name = queued_message.message_attributes \
-                .get('PersonName').get('StringValue')
+            if ma.get('IceBreaker'):
+                self.ice_breaker = queued_message.message_attributes \
+                    .get('IceBreaker').get('StringValue')
+            else:
+                self.ice_breaker = ""
+
+            if ma.get('BotNames'):
+                self.bot_names = queued_message.message_attributes \
+                    .get('BotNames').get('StringValue')
+            else:
+                self.bot_names = ''
+
+            if ma.get('RequiredBots'):
+                self.required_bots = queued_message.message_attributes \
+                    .get('RequiredBots').get('StringValue')
+            else:
+                self.required_bots = ''
+
             self.voice_id = queued_message.message_attributes \
                 .get('Voice').get('StringValue')
+            person_name = queued_message.message_attributes \
+                .get('PersonName').get('StringValue')
             self.person_name = person_name
-            print 'key = ' + self.uuid_key
             try:
                 if expiration_date:
                     self.expiration_datetime_in_utc = \
@@ -264,7 +283,6 @@ class QueuedMessage(object):
                                 arrow.utcnow(), False)
             self.is_expired = False
         self.original_message = kwargs.get("Message", "")
-        print self.__str__()
 
     def __str__(self):
         return "\n".join([

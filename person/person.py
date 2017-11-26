@@ -119,6 +119,14 @@ class PersonManager(object):
 
         return p
 
+    def delete(self, **kwargs):
+        dynamodb = boto3.resource('dynamodb')
+        person_name = kwargs.get('PersonName')
+        table = dynamodb.Table(PERSON_TABLE)
+        table.delete_item(Key={
+                    PERSON_HASH_KEY: person_name
+                })
+
     def update_person(self, **kwargs):
         dynamodb = boto3.resource('dynamodb')
         name = kwargs.get('Name')

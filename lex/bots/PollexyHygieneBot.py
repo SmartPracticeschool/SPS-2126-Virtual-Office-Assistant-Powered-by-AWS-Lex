@@ -43,8 +43,8 @@ class PollexyHygieneBot(BaseBot):
         intent = self.lexbot.last_response['intentName']
         if intent == 'PollexyBrushTeethIntent':
             self.lexbot.next_intent = 'I want to brush my teeth'
-        self.lexbot.output(Message="OK, I'll wait a moment for you.")
-        time.sleep(5)
+            self.lexbot.output(Message="OK, I'll wait a moment for you.")
+            time.sleep(5)
         super(PollexyHygieneBot, self).on_failed()
 
     def on_transition_in(self):

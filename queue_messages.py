@@ -56,6 +56,9 @@ def handler(event, context):
             mm.publish_message(Body=m.body, UUID=m.uuid_key,
                                PersonName=m.person_name,
                                NoMoreOccurrences=m.no_more_occurrences,
+                               BotNames=m.bot_names,
+                               IceBreaker=m.ice_breaker,
+                               RequiredBots=m.required_bots,
                                ExpirationDateTimeInUtc=next_exp)
             scheduler.update_queue_status(m.uuid_key, m.person_name, True)
             scheduler.update_last_location(m.uuid_key, m.person_name, idx)

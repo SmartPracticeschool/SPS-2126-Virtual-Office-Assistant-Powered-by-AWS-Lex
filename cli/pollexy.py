@@ -60,9 +60,7 @@ def say(**kwargs):
 @click.option('--region')
 def cli(profile, region, verbose):
     if verbose:
-        print 'setting loglevel to DEBUG'
         os.environ['LOG_LEVEL'] = 'DEBUG'
-    print 'profile = {}'.format(profile)
     os.environ['AWS_PROFILE'] = profile
     if region:
         print 'region = {}'.format(region)
@@ -169,7 +167,6 @@ def lex_play(bot_names, alias, username, voice_id, no_audio, ice_breaker,
              verbose, required_bots):
     if verbose:
         os.environ['LOG_LEVEL'] = 'DEBUG'
-        print 'DEBUG'
     lp = LexPlayer(
         BotNames=bot_names,
         Alias=alias,
@@ -205,10 +202,27 @@ def person_update(name, req_phys_confirmation, no_phys_confirmation,
     else:
         req_phys = None
 
-    pm.update_person(
-        Name=name,
-        RequirePhysicalConfirmation=req_phys,
-        Windows=location_windows)
+    try:
+        pm.update_person(
+            Name=name,
+            RequirePhysicalConfirmation=req_phys,
+            Windows=location_windows)
+    except Exception as e:
+        print "Error creating user: {}".format(e)
+
+    click.echo("Upserted user {}".format(name))
+
+
+@person.command('delete')
+@click.argument('person_name')
+def delete_person(person_name):
+    pm = PersonManager()
+    p = pm.get_person(person_name)
+    if p is None:
+        click.echo('{} does not exist'.format(person_name))
+    else:
+        pm.delete(PersonName=person_name)
+        click.echo('{} deleted'.format(person_name))
 
 
 @person.command('list')
@@ -291,6 +305,7 @@ def list(person_name, include_expired):
 @click.option('--simulate/--dont_simulate', default=False)
 @click.option('--voice_id')
 @click.option('--fail_confirm/--dont_fail_confirm', default=False)
+@click.option('--verbose/--no-verbose', default=False)
 def speak(person_name,
           location_name,
           ignore_motion,
@@ -298,11 +313,14 @@ def speak(person_name,
           voice_id,
           no_audio,
           simulate,
-          fail_confirm):
+          fail_confirm,
+          verbose):
+    log = logging.getLogger('PollexyCli')
+    if verbose:
+        os.environ['LOG_LEVEL'] = 'DEBUG'
+        log.setLevel(logging.DEBUG)
     try:
         while True:
-            click.echo("Checking for messages . . .")
-
             lm = LocationManager()
             loc = lm.get_location(location_name)
             if not ignore_motion and not loc.is_motion:
@@ -310,19 +328,33 @@ def speak(person_name,
                 exit(1)
             speaker = Speaker(NoAudio=no_audio)
             message_manager = MessageManager(LocationName=location_name)
-            click.echo('getting files')
+            bm = message_manager.get_messages(MessageType='Bot',
+                                              PersonName=person_name)
+            print 'Getting bots'
+            log.debug('Bot count = {}'.format(len(bm)))
+            if len(bm) > 0:
+                for bot in bm:
+                    lp = LexPlayer(
+                        BotNames=bot.bot_names,
+                        Alias="$LATEST",
+                        Username=person_name,
+                        VoiceId=voice_id,
+                        IceBreaker=bot.ice_breaker,
+                        NoAudio=no_audio,
+                        BotsRequired=bot.required_bots)
+                    while (not lp.is_done):
+                        lp.get_user_input()
+                message_manager.succeed_messages(dont_delete=simulate)
+
             cache_manager = CacheManager(BucketName='pollexy-media',
                                          CacheName='chimes')
             cache_manager.sync_remote_folder()
-            print 'Writing speech'
             vid, speech = message_manager.write_speech(PersonName=person_name)
             if vid:
                 voice_id = vid
             if not speech:
-                print "I have nothing to say"
                 message_manager.delete_sqs_msgs()
             else:
-                print "Speech:\n\n%s" % speech
                 try:
                     pm = PersonManager()
                     p = pm.get_person(person_name)
@@ -344,9 +376,9 @@ def speak(person_name,
                         speaker.generate_audio(Message=speech, TextType='ssml',
                                                VoiceId=voice_id)
                         speaker.speak(IncludeChime=True)
-                        message_manager.succeed_speech(dont_delete=simulate)
+                        message_manager.succeed_messages(dont_delete=simulate)
                     else:
-                        message_manager.fail_speech(Reason=reason)
+                        message_manager.fail_messages(Reason=reason)
                 finally:
                     speaker.cleanup()
 
@@ -361,56 +393,59 @@ def speak(person_name,
 @message.command('queue')
 @click.option('--simulate/--dont_simulate')
 @click.option('--simulated_date')
-def queue(simulate, simulated_date):
+@click.option('--verbose/--no-verbose', default=False)
+def queue(simulate, simulated_date, verbose):
+    log = logging.getLogger('PollexyCli')
+    if verbose:
+        os.environ['LOG_LEVEL'] = 'DEBUG'
+        log.setLevel(logging.DEBUG)
     try:
         if simulated_date:
             dt = arrow.get(simulated_date)
         else:
             dt = arrow.utcnow()
         scheduler = Scheduler()
-        print 'getting messages'
         msgs = scheduler.get_messages()
-        logging.info("Starting MessageManager")
-        logging.info("messages = %s" % len(msgs))
         if len(msgs) == 0:
             click.echo("No messages are ready to be queued")
-        else:
-            click.echo("Number of messages to be scheduled: %s" % len(msgs))
+            return
+
+        log.debug("Number of messages to be scheduled: %s" % len(msgs))
         for m in msgs:
             if not simulate:
-                logging.info("Getting person %s " % m.person_name)
                 pm = PersonManager()
                 p = pm.get_person(m.person_name)
                 if not p:
-                    logging.warn(m.person_name +
-                                 "does not have an entry in the " +
-                                 "Person table")
+                    log.warn(m.person_name +
+                             "does not have an entry in the " +
+                             "Person table")
                     continue
                 if p.all_available_count(dt) == 0:
-                    logging.warn('No locations available for %s' %
-                                 m.person_name)
-                    click.echo('No locations available for %s' %
-                               m.person_name)
+                    log.debug('No locations available for %s' %
+                              m.person_name)
                     continue
                 avail_windows = p.all_available(dt)
-                click.echo('# of locations avail: {}, last_loc={}'
-                           .format(p.all_available_count(dt),
-                                   m.last_loc))
+                log.debug('# of locations avail: {}, last_loc={}'
+                          .format(p.all_available_count(dt),
+                                  m.last_loc))
                 if m.last_loc == p.all_available_count(dt)-1:
-                    click.echo('Resetting to first location')
+                    log.debug('Resetting to first location')
                     idx = 0
                 else:
-                    click.echo('Moving to next location')
+                    log.debug('Moving to next location')
                     idx = m.last_loc + 1
 
                 active_window = avail_windows[int(idx)]
                 next_exp = m.next_expiration_utc.isoformat()
                 mm = MessageManager(LocationName=active_window.location_name)
-                click.echo("Publishing message for person %s to location %s"
-                           % (m.person_name, active_window.location_name))
+                log.debug("Publishing message for person %s to location %s"
+                          % (m.person_name, active_window.location_name))
                 mm.publish_message(Body=m.body, UUID=m.uuid_key,
                                    PersonName=m.person_name,
                                    NoMoreOccurrences=m.no_more_occurrences,
+                                   BotNames=m.bot_names,
+                                   RequiredBots=m.required_bots,
+                                   IceBreaker=m.ice_breaker,
                                    ExpirationDateTimeInUtc=next_exp)
                 scheduler.update_queue_status(m.uuid_key, m.person_name, True)
                 scheduler.update_last_location(m.uuid_key, m.person_name, idx)
@@ -437,6 +472,9 @@ def queue(simulate, simulated_date):
 @click.option('--count', default='1')
 @click.option('--lexbot')
 @click.option('--timezone')
+@click.option('--bot_names')
+@click.option('--ice_breaker')
+@click.option('--required_bots')
 def message_schedule(person_name,
                      message,
                      ical,
@@ -448,6 +486,9 @@ def message_schedule(person_name,
                      start_date,
                      start_time,
                      end_date,
+                     bot_names,
+                     ice_breaker,
+                     required_bots,
                      end_time):
     try:
         click.echo("Scheduling message for person {}".format(person_name))
@@ -486,6 +527,9 @@ def message_schedule(person_name,
             Lexbot=lexbot,
             TimeZone=timezone,
             Interval=interval,
+            BotNames=bot_names,
+            IceBreaker=ice_breaker,
+            RequiredBots=required_bots,
             EndDateTimeInUtc=end_datetime)
         scheduler.schedule_message(message)
         click.echo('Start Time: {}'.format(start_datetime))
