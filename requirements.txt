@@ -11,7 +11,7 @@ pygame==1.9.3
 click==6.7
 botocore==1.7.43
 sounddevice==0.3.7
-icalendar==3.11.3
+icalendar==4.0.0
 pcli==0.2.3
 boto3==1.4.7
 PyAudio==0.2.11

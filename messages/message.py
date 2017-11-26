@@ -173,13 +173,8 @@ class ScheduledMessage(object):
             return next_occur, next_expire
         else:
             start = self.start_datetime_in_utc.datetime
-            if self.ical == 'VEVENT':
-                cal = Calendar.from_ical(self.ical)
-                for component in cal.walk():
-                    if component.name == 'VEVENT':
-                        rrule = component.get('RRULE').to_ical().decode('utf-8')
-            else:
-                rrule = self.ical
+            cal = Calendar.from_ical(self.ical)
+            rrule = cal.get('RRULE').to_ical()
             rule = rrulestr(rrule, dtstart=start)
             next_after_now = rule.after(self.compare_datetime_in_utc or
                                         arrow.utcnow().datetime)

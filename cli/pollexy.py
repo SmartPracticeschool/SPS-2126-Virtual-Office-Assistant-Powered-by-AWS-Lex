@@ -495,7 +495,7 @@ def queue(simulate, simulated_date, verbose):
 @click.option('--end_date')
 @click.option('--frequency')
 @click.option('--interval')
-@click.option('--count', default='1')
+@click.option('--count')
 @click.option('--lexbot')
 @click.option('--timezone')
 @click.option('--bot_names')
