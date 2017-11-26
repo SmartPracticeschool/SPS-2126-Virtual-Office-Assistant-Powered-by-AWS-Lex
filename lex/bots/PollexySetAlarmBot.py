@@ -15,7 +15,6 @@ class PollexySetAlarmBot(BaseBot):
         super(PollexySetAlarmBot, self).on_fulfilled()
 
     def on_failed(self):
-        print "No help will be provided."
         super(PollexySetAlarmBot, self).on_failed()
 
     def on_transition_in(self):
