@@ -6,7 +6,7 @@
 #    http://aws.amazon.com/asl/
 # or in the "license" file accompanying this file. This file is distributed
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, expressi
-# or implied. See the License for the specific language governing permissions 
+# or implied. See the License for the specific language governing permissions
 # and limitations under the License.
 
 import arrow
@@ -106,11 +106,11 @@ class LocationManager(object):
         table.meta.client.get_waiter('table_exists') \
             .wait(TableName=LOCATION_TABLE)
 
-    def create(self, **kwargs):
+    def upsert(self, **kwargs):
         name = kwargs.get('Name')
         dynamodb = boto3.resource('dynamodb')
         table = dynamodb.Table(LOCATION_TABLE)
-        resp = table.update_item(
+        table.update_item(
             Key={
                 HASH_KEY: name
             },
@@ -119,7 +119,16 @@ class LocationManager(object):
                 ':lo': arrow.utcnow().isoformat()
             }
         )
-        print (resp)
+
+    def delete(self, **kwargs):
+        name = kwargs.get('Name')
+        dynamodb = boto3.resource('dynamodb')
+        table = dynamodb.Table(LOCATION_TABLE)
+        table.delete_item(
+            Key={
+                HASH_KEY: name
+            }
+        )
 
     def update_location_activity(self, loc_name):
         dynamodb = boto3.resource('dynamodb')

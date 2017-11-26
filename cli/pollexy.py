@@ -225,6 +225,19 @@ def delete_person(person_name):
         click.echo('{} deleted'.format(person_name))
 
 
+@person.command('availability')
+@click.argument('person_name')
+def person_availability(person_name):
+    pm = PersonManager()
+    p = pm.get_person(person_name)
+    locs = p.all_available()
+    if len(locs) > 0:
+        for l in locs:
+            print l.location_name
+    else:
+        print "No locations are currently acrive"
+
+
 @person.command('list')
 def person_list():
     pm = PersonManager()
@@ -258,11 +271,24 @@ def location():
     pass
 
 
-@location.command('create')
+@location.command('upsert')
 @click.argument('name')
-def location_create(name):
+def location_upsert(name):
     lm = LocationManager()
-    lm.create(Name=name)
+    lm.upsert(Name=name)
+    click.echo('Upserted location {}'.format(name))
+
+
+@location.command('delete')
+@click.argument('name')
+def location_delete(name):
+    lm = LocationManager()
+    loc = lm.get_location(name)
+    if loc:
+        lm.delete(Name=name)
+        click.echo('Deleted location {}'.format(name))
+    else:
+        click.echo("Location {} does not exist".format(name))
 
 
 @location.command('list')
@@ -273,7 +299,7 @@ def location_list():
         click.echo("There are no locations")
     else:
         for l in locs:
-            click.echo(l.location_name)
+            click.echo(l.location_name['S'])
 
 
 @cli.group('message')

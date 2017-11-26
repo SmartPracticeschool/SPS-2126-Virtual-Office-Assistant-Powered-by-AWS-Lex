@@ -1,0 +1,10 @@
+- is_muted: false
+  priority: 100
+  ical: |2
+
+    BEGIN:VEVENT
+    DTSTART;VALUE=DATE-TIME:20170101T110000
+    DURATION:PT12H
+    RRULE:FREQ=DAILY
+    END:VEVENT
+  location_name: <my location>
