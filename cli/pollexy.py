@@ -28,6 +28,7 @@ import os
 import sys
 import json
 import tzlocal
+import uuid
 from dateutil import tz
 from ConfigParser import SafeConfigParser
 from python_terraform import Terraform
@@ -307,18 +308,39 @@ def message():
     pass
 
 
+@message.command('reset')
+@click.argument('location_name')
+@click.option('--verbose/--no-verbose', default=False)
+def message_reset(location_name, verbose):
+    log = logging.getLogger('PollexyCli')
+    if verbose:
+        os.environ['LOG_LEVEL'] = 'DEBUG'
+        log.setLevel(logging.DEBUG)
+    m = MessageManager(LocationName=location_name)
+    m.reset()
+
+
 @message.command('list')
 @click.argument('person_name')
 @click.option('--include_expired/--dont_include_expired', default=False)
-def list(person_name, include_expired):
+@click.option('--verbose/--no-verbose', default=False)
+def list(person_name, include_expired, verbose):
+    log = logging.getLogger('PollexyCli')
+    if verbose:
+        os.environ['LOG_LEVEL'] = 'DEBUG'
+        log.setLevel(logging.DEBUG)
     s = Scheduler()
-    msgs = s.get_messages()
+    msgs = s.get_messages(IncludeExpired=True, ready_only=False)
     for m in msgs:
         if not m.person_name == person_name:
+            log.debug('Skipping message for {}'.format(m.person_name))
             continue
-        print '* {}\n "{}"\n Next: {}\n'.format(m.uuid_key,
-                                                m.body,
-                                                m.next_occurrence_local)
+        print '\n* {}\n "{}"\n Next: {}\n Expired: {}\n Queued: {}'.format(
+                m.uuid_key,
+                m.body,
+                m.next_occurrence_local,
+                bool(m.no_more_occurrences),
+                bool(m.is_queued))
 
 
 @message.command('speak')
@@ -356,20 +378,25 @@ def speak(person_name,
             message_manager = MessageManager(LocationName=location_name)
             bm = message_manager.get_messages(MessageType='Bot',
                                               PersonName=person_name)
-            print 'Getting bots'
-            log.debug('Bot count = {}'.format(len(bm)))
-            if len(bm) > 0:
+            if bm and len(bm) > 0:
+                log.debug('Bot count = {}'.format(len(bm)))
                 for bot in bm:
-                    lp = LexPlayer(
-                        BotNames=bot.bot_names,
-                        Alias="$LATEST",
-                        Username=person_name,
-                        VoiceId=voice_id,
-                        IceBreaker=bot.ice_breaker,
-                        NoAudio=no_audio,
-                        BotsRequired=bot.required_bots)
-                    while (not lp.is_done):
-                        lp.get_user_input()
+                    print bot.bot_names
+                    username = str(uuid.uuid4())
+                    try:
+                        lp = LexPlayer(
+                            BotNames=bot.bot_names,
+                            Alias="$LATEST",
+                            Username=username,
+                            VoiceId=voice_id,
+                            IceBreaker=bot.ice_breaker,
+                            NoAudio=no_audio,
+                            BotsRequired=bot.required_bots)
+                        while (not lp.is_done):
+                            lp.get_user_input()
+                    except Exception as e:
+                        print 'Bot failed: {}'.format(e)
+                        raise
                 message_manager.succeed_messages(dont_delete=simulate)
 
             cache_manager = CacheManager(BucketName='pollexy-media',
@@ -379,6 +406,7 @@ def speak(person_name,
             if vid:
                 voice_id = vid
             if not speech:
+                message_manager.succeed_messages(dont_delete=simulate)
                 message_manager.delete_sqs_msgs()
             else:
                 try:
@@ -386,7 +414,7 @@ def speak(person_name,
                     p = pm.get_person(person_name)
                     do_speech = True
                     if fail_confirm:
-                        logging.warning("FORCE FAILING confirmation")
+                        log.warn("FORCE FAILING confirmation")
                         reason, do_speech = "NoResponse", False
 
                     elif not no_audio and p.require_physical_confirmation and \
@@ -396,15 +424,19 @@ def speak(person_name,
                                                   VoiceId=voice_id)
                         do_speech, retry_count, timeout = \
                             lv.verify_person_at_location(SpeechMethod=say)
-
-                    if do_speech:
-                        speaker = Speaker(NoAudio=no_audio)
-                        speaker.generate_audio(Message=speech, TextType='ssml',
-                                               VoiceId=voice_id)
-                        speaker.speak(IncludeChime=True)
-                        message_manager.succeed_messages(dont_delete=simulate)
-                    else:
+                    log.debug('do_speech={}'.format(bool(do_speech)))
+                    if fail_confirm:
                         message_manager.fail_messages(Reason=reason)
+                    else:
+                        if do_speech:
+                            log.debug('starting speech')
+                            speaker = Speaker(NoAudio=no_audio)
+                            speaker.generate_audio(Message=speech,
+                                                   TextType='ssml',
+                                                   VoiceId=voice_id)
+                            speaker.speak(IncludeChime=True)
+                        log.debug('Succeeding messages')
+                        message_manager.succeed_messages(dont_delete=simulate)
                 finally:
                     speaker.cleanup()
 
@@ -517,6 +549,8 @@ def message_schedule(person_name,
                      required_bots,
                      end_time):
     try:
+        print ice_breaker
+        print required_bots
         click.echo("Scheduling message for person {}".format(person_name))
         scheduler = Scheduler()
         if not timezone:

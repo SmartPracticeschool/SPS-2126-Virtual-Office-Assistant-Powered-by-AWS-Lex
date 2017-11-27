@@ -314,9 +314,17 @@ class LexBot(object):
             self.log.setLevel(logging.DEBUG)
 
     def load_bot(self):
-        m = __import__('lex.bots.{}'.format(self.bot_name),
-                       fromlist=["*"])
-        self.bot = getattr(m, self.bot_name)(self)
+        try:
+            m = __import__('lex.bots.{}'.format(self.bot_name),
+                           fromlist=["*"])
+            self.bot = getattr(m, self.bot_name)(self)
+        except Exception as e:
+            print "Error loading {} bot plugin".format(self.bot_name)
+            print e
+            m = __import__('lex.bots', fromlist=["BaseBot"])
+            print m
+            self.bot = getattr(m, 'BaseBot')()
+            print self.bot
         self.bot.register()
 
     def send_response(self, data, **kwargs):

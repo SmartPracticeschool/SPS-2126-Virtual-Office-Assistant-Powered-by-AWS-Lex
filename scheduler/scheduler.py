@@ -74,7 +74,8 @@ class Scheduler(object):
             }
         )
 
-    def get_messages(self, compare_date='', ready_only=True):
+    def get_messages(self, compare_date='', ready_only=True, **kwargs):
+        include_expired = kwargs.get('IncludeExpired', False)
         self.log.debug("Checking for scheduled messages: compare_date={}," +
                        "ready_only={}".format(compare_date, bool(ready_only)))
         dynamodb = boto3.resource('dynamodb')
@@ -92,7 +93,7 @@ class Scheduler(object):
                            % (MESSAGE_SCHEDULE_DB, len(response['Items'])))
         for item in response['Items']:
             m = convert_to_scheduled_message(item)
-            if m.no_more_occurrences:
+            if m.no_more_occurrences and not include_expired:
                 continue
             self.log.debug('Message: {}'.format(m.body))
             if not ready_only or (ready_only and

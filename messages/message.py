@@ -34,7 +34,6 @@ class ScheduledMessage(object):
         self.compare_datetime_in_utc = kwargs.pop("CompareDateTimeInUtc", "")
         self.last_occurrence_in_utc = kwargs.pop("LastOccurrenceInUtc",
                                                  None)
-        self.no_more_occurrences = str(self.next_occurrence_utc) == 'N/A'
         self.frequency = kwargs.pop("Frequency", "")
         self.count = kwargs.pop("Count", "")
         self.interval = kwargs.pop("Interval", "")
@@ -56,6 +55,7 @@ class ScheduledMessage(object):
                 raise ValueError("Start datetime is after end datetime")
         if (not self.body):
             raise ValueError("Message body is empty")
+        self.no_more_occurrences = str(self.next_occurrence_utc) == 'N/A'
         logging.debug(self.__str__())
 
     def to_ical(self):
@@ -174,10 +174,14 @@ class ScheduledMessage(object):
         else:
             start = self.start_datetime_in_utc.datetime
             cal = Calendar.from_ical(self.ical)
-            rrule = cal.get('RRULE').to_ical()
-            rule = rrulestr(rrule, dtstart=start)
-            next_after_now = rule.after(self.compare_datetime_in_utc or
-                                        arrow.utcnow().datetime)
+            if cal.get('RRULE'):
+                rrule = cal.get('RRULE').to_ical()
+                rule = rrulestr(rrule, dtstart=start)
+                next_after_now = rule.after(self.compare_datetime_in_utc or
+                                            arrow.utcnow().datetime)
+            else:
+                next_after_now = None
+
             if not next_after_now:
                 logging.info('No next_after_now, so next_occur=N/A')
                 return 'N/A', self.compare_datetime_in_utc or arrow.utcnow()
@@ -197,20 +201,12 @@ class ScheduledMessage(object):
 
     def is_message_ready(self, **kwargs):
         if self.is_expired or self.is_queued:
-            print 'Expired = {}, Queued = {}'.format(
-                    self.is_expired,
-                    self.is_queued)
             return False
 
         next_occur, expires = self.next_occurrence()
         if next_occur == 'N/A':
             return True
-        print self.compare_datetime_in_utc
         compare_datetime = self.compare_datetime_in_utc or arrow.utcnow()
-        print 'self.end_datetime: {}'.format(self.end_datetime_in_utc)
-        print 'next: {}'.format(next_occur)
-        print 'compare_datetime= {}'.format(compare_datetime)
-        print 'next <= compare: {}'.format(next_occur <= compare_datetime)
         if next_occur <= compare_datetime:
             if self.end_datetime_in_utc and \
                     self.end_datetime_in_utc <= next_occur:

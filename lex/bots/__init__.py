@@ -1,4 +1,8 @@
 class BaseBot(object):
+    def __init__(self):
+        if not hasattr(self, 'bot_name'):
+            self.bot_name = 'BaseBot'
+
     def on_fulfilled(self):
         pass
 

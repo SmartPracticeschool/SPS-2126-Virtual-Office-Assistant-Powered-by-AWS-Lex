@@ -23,14 +23,13 @@ import os
 MESSAGE_LIBRARY_TABLE = 'PollexyMessageLibrary'
 
 
-def get_queue(location_name):
+def get_queue(queue_name):
     """get a queue by name"""
     log = logging.getLogger("GetQueue")
     if os.environ.get('LOG_LEVEL') == 'DEBUG':
         log.setLevel(logging.DEBUG)
     sqs = boto3.resource('sqs')
     client = boto3.client('sqs')
-    queue_name = 'pollexy-inbox-%s' % (location_name)
     queue_url = ""
     try:
         log.debug('Getting queue: {}'.format(queue_name))
@@ -70,14 +69,15 @@ class MessageManager(object):
         bot_queue = None
         self.log.debug('Validating queue')
         try:
-            bot_queue = get_queue('{}-bot'.format(self.location_name))
+            bot_queue = get_queue(self.bot_queue_name)
             if bot_queue is None:
-                self.log.debug('Bot queue does not exist, creating . . .')
+                self.log.debug('Bot queue does not exist, creating {}'
+                               .format(self.bot_queue_name))
                 bot_queue = sqs.create_queue(QueueName=self.bot_queue_name)
-            queue = get_queue(self.location_name)
+            queue = get_queue(self.queue_name)
             if queue is None:
                 self.log.debug('Message queue does not exist, creating . . .')
-                queue = sqs.create_queue(QueueName=self.bot_queue_name)
+                queue = sqs.create_queue(QueueName=self.queue_name)
         except Exception as e:
             self.log.error(e)
             self.is_valid_queue = False
@@ -92,6 +92,8 @@ class MessageManager(object):
     def get_messages(self, **kwargs):
         person_name = kwargs.get('PersonName', '')
         message_type = kwargs.get('MessageType', 'Message')
+        wait_time_seconds = kwargs.get('WaitTimeSeconds', 0)
+        max_number_of_messages = kwargs.get('MaxNumberOfMessages', 10)
         self.sqs_msgs = []
         self.log.debug("Checking messages in the queue, person={}, type={}"
                        .format(person_name, message_type))
@@ -110,15 +112,15 @@ class MessageManager(object):
                                    'RequiredBots',
                                    'IceBreaker',
                                    'UUID'],
-            WaitTimeSeconds=20,
-            MaxNumberOfMessages=10)
+            WaitTimeSeconds=wait_time_seconds,
+            MaxNumberOfMessages=max_number_of_messages)
         self.log.debug(len(messages))
         if len(messages) > 0:
             self.log.debug('Received {}:'.format(len(messages)))
             msgs = []
             for m in messages:
                 qm = QueuedMessage(QueuedMessage=m)
-                if not qm.person_name == person_name:
+                if person_name and not qm.person_name == person_name:
                     self.log.debug('Skipping message for {}, looking for {}'
                                    .format(qm.person_name, person_name))
                     continue
@@ -130,7 +132,7 @@ class MessageManager(object):
                 msgs.append(qm)
                 scheduler = Scheduler()
                 scheduler.update_queue_status(qm.uuid_key,
-                                              person_name,
+                                              qm.person_name,
                                               False)
                 return msgs
 
@@ -152,9 +154,13 @@ class MessageManager(object):
         return m.voice_id, sh.replace_tokens(speech)
 
     def delete_sqs_msgs(self):
+        client = boto3.client('sqs')
+        self.log.debug('Deleting {} messages'.format(len(self.sqs_msgs)))
         for m in self.sqs_msgs:
-            logging.info('Deleting message from queue')
-            m.delete()
+            self.log.debug('Deleting message from queue')
+            print m
+            client.delete_message(QueueUrl=m.queue_url,
+                                  ReceiptHandle=m.receipt_handle)
 
     def fail_messages(self, **kwargs):
         logging.info('Speech failed: ' + kwargs.get('Reason',
@@ -188,6 +194,16 @@ class MessageManager(object):
                 scheduler.set_expired(qm.uuid_key, qm.person_name)
         self.delete_sqs_msgs()
 
+    def reset(self, **kwargs):
+        self.get_messages(MessageType='Bot', WaitTimeSeconds=0)
+        self.log.debug('Deleting queued bot messages')
+        self.fail_messages()
+        self.delete_sqs_msgs()
+        self.get_messages(MessageType='Message', WaitTimeSeconds=0)
+        self.log.debug('Deleting queued messages')
+        self.fail_messages()
+        self.delete_sqs_msgs()
+
     def publish_message(self, **kwargs):
         expiration_date = kwargs.pop('ExpirationDateTimeInUtc',
                                      '2299-12-31 00:00:00')
@@ -195,9 +211,9 @@ class MessageManager(object):
         uuid_key = kwargs.pop('UUID', str(uuid.uuid4()))
         no_more_occ = kwargs.pop('NoMoreOccurrences', False)
         person_name = kwargs.pop('PersonName', '')
-        bot_names = kwargs.pop('BotNames', '')
-        required_bots = kwargs.pop('RequiredBots', '')
-        ice_breaker = kwargs.pop('IceBreaker', '')
+        bot_names = kwargs.pop('BotNames', None)
+        required_bots = kwargs.pop('RequiredBots', None)
+        ice_breaker = kwargs.pop('IceBreaker', None)
         voice = kwargs.pop('VoiceId', 'Joanna')
         if not person_name:
             raise ValueError("No person provided")
@@ -207,8 +223,6 @@ class MessageManager(object):
             raise ValueError('No message body provided')
         if kwargs:
             raise TypeError('Unexpected **kwargs: %r' % kwargs)
-        self.log.debug('Publishing message to {}:\n{}'
-                       .format(self.queue_name, body))
 
         pm = PersonManager()
         p = pm.get_person(person_name)
@@ -264,6 +278,7 @@ class MessageManager(object):
             self.log.debug('Publishing to message queue')
             self.queue.send_message(MessageBody=body,
                                     MessageAttributes=msg_attr)
+        self.log.debug(body)
 
 
 class LibraryManager(object):
