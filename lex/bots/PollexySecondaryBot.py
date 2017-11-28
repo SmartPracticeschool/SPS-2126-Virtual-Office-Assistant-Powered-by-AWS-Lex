@@ -26,6 +26,8 @@ class PollexySecondaryBot(BaseBot):
         super(PollexySecondaryBot, self).on_failed()
 
     def on_transition_in(self):
+        if self.lexbot.last_intent == 'PollexyEmergencyIntent':
+            self.lexbot.output(Message="Let's get you some help")
         pass
 
     def on_transition_out(self):

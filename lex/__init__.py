@@ -371,6 +371,11 @@ class LexBot(object):
                     return self.last_response['ResponseMetadata']
 
     @property
+    def needs_slot(self):
+        return 'dialogState' in self.last_response.keys() and \
+                self.last_response['dialogState'] == 'ElicitSlot'
+
+    @property
     def needs_intent(self):
         return 'dialogState' in self.last_response.keys() and \
                 self.last_response['dialogState'] == 'ElicitIntent'
@@ -580,8 +585,10 @@ class LexPlayer(object):
 
     def get_user_input(self):
         self.active_bot.get_user_input()
-        if self.active_bot.needs_intent:
-            self.log.debug('{} bot response was not understood: {}'
+        pprint.pprint(self.last_response)
+        if self.active_bot.is_failed or self.active_bot.needs_intent or \
+                self.active_bot.needs_slot:
+            self.log.debug('{} status is ElicitIntent or ElicitSlot: {}'
                            .format(self.active_bot_name, self.last_thing_said))
             self.log.debug('Checking other bots')
             for b in self.bots:
