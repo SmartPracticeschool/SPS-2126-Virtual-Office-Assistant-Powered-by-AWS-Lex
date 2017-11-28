@@ -432,6 +432,7 @@ class LexBot(object):
         else:
             audio_file_path = self.listen()
             self.send_response(audio_file_path)
+            os.remove(audio_file_path)
         self.last_message = message
 
     def listen(self):
@@ -441,11 +442,10 @@ class LexBot(object):
             # r.adjust_for_ambient_noice(source)
             print 'Listening . . .'
             audio = r.listen(source)
-            print 'Done listening. Writing file . . . '
+            print 'Done listening. Processing . . .'
             filename = os.path.join('/tmp', str(uuid.uuid4()))
             with open(filename, 'wb') as f:
                 f.write(audio.get_wav_data())
-                print 'writing ' + filename
             return filename
 
     def output(self, **kwargs):
@@ -487,6 +487,7 @@ class LexPlayer(object):
         self.history = []
         self.voice_id = kwargs.get('VoiceId', 'Joanna')
         self.client = boto3.client('lex-runtime')
+        introduction = kwargs.get('Introduction', '')
         if kwargs.get('BotsRequired'):
             self.bots_required = kwargs.get('BotsRequired').split(',')
         else:
@@ -496,6 +497,8 @@ class LexPlayer(object):
         self.log = logging.getLogger("LexPlayer")
         if os.environ.get('LOG_LEVEL') == 'DEBUG':
             self.log.setLevel(logging.DEBUG)
+        if introduction:
+            self.active_bot.output(Message=introduction)
         if self.ice_breaker:
             self.send_response(self.ice_breaker, TextMode=True)
 
@@ -598,7 +601,6 @@ class LexPlayer(object):
                         self.active_bot.bot.on_transition_in()
                     break
         elif self.active_bot.is_fulfilled or self.active_bot.is_failed:
-            pprint.pprint(self.last_response)
             if self.active_bot.next_intent:
                 self.send_response(self.active_bot.next_intent,
                                    TextMode=True)
@@ -619,3 +621,5 @@ class LexPlayer(object):
                     elif done and not self.is_all_done:
                         self.send_response('I may need something else',
                                            TextMode=True)
+                    else:
+                        self.active_bot.output(Message="OK, goodbye.")

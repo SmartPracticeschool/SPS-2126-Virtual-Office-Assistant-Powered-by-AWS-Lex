@@ -150,12 +150,13 @@ def apply_intents(config_path):
 @click.option('--alias', default='$LATEST')
 @click.option('--username', default='PollexyUser')
 @click.option('--ice_breaker')
+@click.option('--introduction')
 @click.option('--voice_id', default='Joanna')
 @click.option('--no_audio/--audio', default=False)
 @click.option('--required_bots')
 @click.option('--verbose/--no-verbose', default=False)
 def lex_play(bot_names, alias, username, voice_id, no_audio, ice_breaker,
-             verbose, required_bots):
+             verbose, required_bots, introduction):
     if verbose:
         os.environ['LOG_LEVEL'] = 'DEBUG'
     lp = LexPlayer(
@@ -164,6 +165,7 @@ def lex_play(bot_names, alias, username, voice_id, no_audio, ice_breaker,
         Username=username,
         VoiceId=voice_id,
         IceBreaker=ice_breaker,
+        Introduction=introduction,
         NoAudio=no_audio,
         BotsRequired=required_bots)
     while (not lp.is_done):
@@ -380,6 +382,7 @@ def speak(person_name,
                             Username=username,
                             VoiceId=voice_id,
                             IceBreaker=bot.ice_breaker,
+                            Introduction=bot.introduction,
                             NoAudio=no_audio,
                             BotsRequired=bot.required_bots)
                         while (not lp.is_done):
@@ -494,6 +497,7 @@ def queue(simulate, simulated_date, verbose):
                                    BotNames=m.bot_names,
                                    RequiredBots=m.required_bots,
                                    IceBreaker=m.ice_breaker,
+                                   Introduction=m.introduction,
                                    ExpirationDateTimeInUtc=next_exp)
                 scheduler.update_queue_status(m.uuid_key, m.person_name, True)
                 scheduler.update_last_location(m.uuid_key, m.person_name, idx)
@@ -522,6 +526,7 @@ def queue(simulate, simulated_date, verbose):
 @click.option('--timezone')
 @click.option('--bot_names')
 @click.option('--ice_breaker')
+@click.option('--introduction')
 @click.option('--required_bots')
 def message_schedule(person_name,
                      message,
@@ -537,6 +542,7 @@ def message_schedule(person_name,
                      bot_names,
                      ice_breaker,
                      required_bots,
+                     introduction,
                      end_time):
     try:
         print ice_breaker
@@ -579,6 +585,7 @@ def message_schedule(person_name,
             Interval=interval,
             BotNames=bot_names,
             IceBreaker=ice_breaker,
+            Introduction=introduction,
             RequiredBots=required_bots,
             EndDateTimeInUtc=end_datetime)
         scheduler.schedule_message(message)
