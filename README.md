@@ -34,6 +34,7 @@ Your IP address and login information is located here:
                 "lex:GetBuiltinIntent",
                 "cloudformation:CreateUploadBucket",
                 "sqs:ListQueues",
+                "polly:*",
                 "cloudformation:ListStacks",
                 "lex:GetBots",
                 "logs:DescribeLogGroups",
