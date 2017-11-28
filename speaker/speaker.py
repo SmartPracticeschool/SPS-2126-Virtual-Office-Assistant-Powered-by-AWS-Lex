@@ -76,7 +76,7 @@ class Speaker(object):
             if (include_chime):
                 logging.info('chime={}/{}.wav'.format(self.chime_path, chime))
                 pygame.mixer.music.load("%s/%s.wav" % (self.chime_path, chime))
-                pygame.mixer.music.play(1)
+                pygame.mixer.music.play()
             while pygame.mixer.music.get_busy():
                 pygame.time.Clock().tick(10)
             pygame.mixer.music.load(audio_file_to_play)

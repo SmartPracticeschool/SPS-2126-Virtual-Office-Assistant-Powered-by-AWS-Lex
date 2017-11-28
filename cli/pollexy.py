@@ -45,16 +45,6 @@ class Config():
         self.value = 777
 
 
-def say(**kwargs):
-    msg = kwargs.get('Message')
-    voice = kwargs.get('VoiceId', 'Joanna')
-    include_chime = kwargs.get('IncludeChime', True)
-    s = Speaker()
-    s.generate_audio(Message=msg, TextType='text',
-                     VoiceId=voice)
-    s.speak(IncludeChime=include_chime)
-
-
 @click.group()
 @click.option('--verbose/--no-verbose', default=False)
 @click.option('--profile', default='pollexy')
@@ -635,7 +625,18 @@ def teach(no_audio, voice_id):
         exit(2)
 
 
-@message.command('say')
+@message.command('just_say')
+@click.option('--include_chime/--do_not_include_chime', default=False)
+@click.option('--voice_id', default="Joanna")
+@click.argument('message')
+def say(message, voice_id, include_chime):
+    s = Speaker()
+    s.generate_audio(Message=message, TextType='text',
+                     VoiceId=voice_id)
+    s.speak(IncludeChime=include_chime)
+
+
+@message.command('say_at')
 @click.argument('person_name')
 @click.argument('location_name')
 @click.argument('message')
@@ -661,8 +662,6 @@ def message_say(person_name, location_name, message, voice_id):
         exit(2)
 
 
-@cli.command()
-@click.pass_obj
 def upload_face(obj):
     try:
         error_if_missing(obj, 'person')
@@ -678,8 +677,6 @@ def upload_face(obj):
         exit(2)
 
 
-@cli.command()
-@click.pass_obj
 def match_face(obj):
     try:
         error_if_missing(obj, 'path')
@@ -694,8 +691,6 @@ def match_face(obj):
         exit(2)
 
 
-@cli.command()
-@click.pass_obj
 def update_location_activity(obj):
     try:
         error_if_missing(obj, 'location_name')
