@@ -312,6 +312,21 @@ def message_reset(location_name, verbose):
     m.reset()
 
 
+@message.command('delete')
+@click.argument('person_name')
+@click.argument('message_id')
+@click.option('--verbose/--no-verbose', default=False)
+def message_delete(person_name, message_id, verbose):
+    log = logging.getLogger('PollexyCli')
+    if verbose:
+        os.environ['LOG_LEVEL'] = 'DEBUG'
+        log.setLevel(logging.DEBUG)
+    s = Scheduler()
+    click.echo('Deleting message')
+    s.delete_message(Key=message_id,
+                     PersonName=person_name)
+
+
 @message.command('list')
 @click.argument('person_name')
 @click.option('--include_expired/--dont_include_expired', default=False)
@@ -373,7 +388,6 @@ def speak(person_name,
             if bm and len(bm) > 0:
                 log.debug('Bot count = {}'.format(len(bm)))
                 for bot in bm:
-                    print bot.bot_names
                     username = str(uuid.uuid4())
                     try:
                         lp = LexPlayer(

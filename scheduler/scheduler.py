@@ -184,6 +184,18 @@ class Scheduler(object):
             }
         )
 
+    def delete_message(self, **kwargs):
+        key = kwargs.get('Key')
+        name = kwargs.get('PersonName')
+        dynamodb = boto3.resource('dynamodb')
+        table = dynamodb.Table(MESSAGE_SCHEDULE_DB)
+        table.delete_item(
+            Key={
+                'uuid': key,
+                'person_name': name,
+            }
+        )
+
     def update_last_occurrence(self, uuid, person_name, last_occurrence=None):
         dynamodb = boto3.resource('dynamodb')
         table = dynamodb.Table(MESSAGE_SCHEDULE_DB)

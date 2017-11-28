@@ -16,6 +16,7 @@ PollexyEmergencyIntent:
   - I need help.
   - Something is wrong.
   - Help please.
+  - I need to talk to someone.
 
   slots:
      - name: PollexyEmergencyContactSlot 

@@ -6,7 +6,7 @@
 #    http://aws.amazon.com/asl/
 # or in the "license" file accompanying this file. This file is distributed
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, expressi
-# or implied. See the License for the specific language governing permissions 
+# or implied. See the License for the specific language governing permissions
 # and limitations under the License.
 
 # Copyright 2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
@@ -17,7 +17,7 @@
 #    http://aws.amazon.com/asl/
 # or in the "license" file accompanying this file. This file is distributed
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, expressi
-# or implied. See the License for the specific language governing permissions 
+# or implied. See the License for the specific language governing permissions
 # and limitations under the License.
 
 import boto3
@@ -73,7 +73,6 @@ class CacheManager(object):
 
     def get_remote_file_list(self):
         client = boto3.client('s3')
-        print("{}/{}".format(self.bucket_name, self.cache_name))
         logging.info("Syncing %s/%s" % (self.bucket_name, self.cache_name))
         objects = client.list_objects(Bucket=self.bucket_name,
                                       Prefix="%s/" % self.cache_name)

@@ -139,7 +139,7 @@ class MessageManager(object):
     def write_speech(self, **kwargs):
         dont_delete = kwargs.get('DontDelete', False)
         person_name = kwargs.get('PersonName', '')
-        print 'getting messages for ' + person_name
+        self.log.debug('Getting messages for {}'.format(person_name))
         self.get_messages(DontDelete=dont_delete, PersonName=person_name)
         if len(self.messages) == 0:
             return None, None
@@ -158,7 +158,6 @@ class MessageManager(object):
         self.log.debug('Deleting {} messages'.format(len(self.sqs_msgs)))
         for m in self.sqs_msgs:
             self.log.debug('Deleting message from queue')
-            print m
             client.delete_message(QueueUrl=m.queue_url,
                                   ReceiptHandle=m.receipt_handle)
 
@@ -189,7 +188,6 @@ class MessageManager(object):
             qm = QueuedMessage(QueuedMessage=m)
             scheduler.update_last_occurrence(qm.uuid_key, qm.person_name)
             scheduler.update_queue_status(qm.uuid_key, qm.person_name, False)
-            print('No more occurrences = {}'.format(qm.no_more_occurrences))
             if qm.no_more_occurrences:
                 scheduler.set_expired(qm.uuid_key, qm.person_name)
         self.delete_sqs_msgs()
@@ -335,7 +333,6 @@ class LibraryManager(object):
         if 'Item' not in resp.keys():
             return None
 
-        print resp['Item']
         return(resp['Item'])
 
     def delete_message(self, **kwargs):
