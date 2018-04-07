@@ -175,6 +175,8 @@ Your IP address and login information is located here:
         $ pollexy person list
         There are no users in the system.
 
-5. Deploy the Lambda function:
+5. Follow [these](https://serverless.com/framework/docs/providers/aws/guide/installation/) instructions to install Serverless. 
+
+6. Deploy the Lambda function:
 
          $ pollexy serverless deploy
