@@ -34,6 +34,7 @@ Your IP address and login information is located here:
                 "lex:GetBuiltinIntent",
                 "cloudformation:CreateUploadBucket",
                 "sqs:ListQueues",
+                "polly:*",
                 "cloudformation:ListStacks",
                 "lex:GetBots",
                 "logs:DescribeLogGroups",
@@ -145,7 +146,7 @@ Your IP address and login information is located here:
 1. Login to the pi.
 2. Go to `/root/Amazon-Pollexy` and run this command to update to the latest version:
 
-        $ git pull && ./update.sh
+        $ git reset --hard && git pull && ./update.sh
         
 3. After you login, run this command to configure AWS security:
 
@@ -174,6 +175,8 @@ Your IP address and login information is located here:
         $ pollexy person list
         There are no users in the system.
 
-5. Deploy the Lambda function:
+5. Follow [these](https://serverless.com/framework/docs/providers/aws/guide/installation/) instructions to install Serverless. 
+
+6. Deploy the Lambda function:
 
          $ pollexy serverless deploy
