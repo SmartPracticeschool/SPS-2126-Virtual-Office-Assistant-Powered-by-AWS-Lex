@@ -19,7 +19,6 @@ class PollexySetAlarmBot(BaseBot):
 
     def on_transition_in(self):
         self.lexbot.output(Message="OK, back to setting your alarm.")
-        self.lexbot.send_response(
         pass
 
     def on_transition_out(self):

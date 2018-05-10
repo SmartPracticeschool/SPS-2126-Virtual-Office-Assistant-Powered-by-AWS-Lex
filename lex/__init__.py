@@ -585,7 +585,6 @@ class LexPlayer(object):
 
     def get_user_input(self):
         self.active_bot.get_user_input()
-        pprint.pprint(self.last_response)
         if self.active_bot.is_failed or self.active_bot.needs_intent or \
                 self.active_bot.needs_slot:
             self.log.debug('{} status is ElicitIntent or ElicitSlot: {}'
