@@ -27,35 +27,7 @@ Your IP address and login information is located here:
 {
     "Version": "2012-10-17",
     "Statement": [
-        {
-            "Sid": "VisualEditor0",
-            "Effect": "Allow",
-            "Action": [
-                "lex:GetBuiltinIntent",
-                "cloudformation:CreateUploadBucket",
-                "sqs:ListQueues",
-                "polly:*",
-                "cloudformation:ListStacks",
-                "lex:GetBots",
-                "logs:DescribeLogGroups",
-                "lex:GetBuiltinSlotTypes",
-                "cloudformation:EstimateTemplateCost",
-                "lex:GetIntents",
-                "cloudformation:PreviewStackUpdate",
-                "logs:DescribeExportTasks",
-                "lex:GetSlotTypes",
-                "s3:ListAllMyBuckets",
-                "cloudformation:DescribeAccountLimits",
-                "lex:PostText",
-                "s3:HeadBucket",
-                "cloudformation:DescribeChangeSet",
-                "lex:GetBuiltinIntents",
-                "cloudformation:ValidateTemplate",
-                "lex:PostContent"
-            ],
-            "Resource": "*"
-        },
-        {
+       {
             "Sid": "VisualEditor1",
             "Effect": "Allow",
             "Action": "lex:*",
