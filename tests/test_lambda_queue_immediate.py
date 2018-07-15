@@ -6,7 +6,7 @@
 #    http://aws.amazon.com/asl/
 # or in the "license" file accompanying this file. This file is distributed
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, expressi
-# or implied. See the License for the specific language governing permissions 
+# or implied. See the License for the specific language governing permissions
 # and limitations under the License.
 
 from mock import patch
@@ -14,6 +14,7 @@ from lambda_functions.queue_immediate import handler
 from person.person import Person, PersonManager
 from messages.message_manager import LibraryManager
 import json
+import boto3
 from moto import mock_dynamodb2
 
 
@@ -98,8 +99,28 @@ def test_invalid_message_returns_error(l_mock, p_mock, m_mock):
 @mock_dynamodb2
 def test_no_locations_returns_error(c_mock, l_mock):
     e = test_event()
+    client = boto3.client('dynamodb')
+    client.create_table(
+        AttributeDefinitions=[
+            {
+                'AttributeName': 'PersonName',
+                'AttributeType': 'S'
+            },
+        ],
+        TableName='PollexyPeople',
+        KeySchema=[
+            {
+                'AttributeName': 'PersonName',
+                'KeyType': 'HASH'
+            }],
+        ProvisionedThroughput={
+            'ReadCapacityUnits': 123,
+            'WriteCapacityUnits': 123
+        },
+    )
     lm = LibraryManager()
     lm.update_message(Name='dinner', Message='time for dinner')
+
     pm = PersonManager()
     p = Person(Name='calvin')
     pm.update_window_set(p)
