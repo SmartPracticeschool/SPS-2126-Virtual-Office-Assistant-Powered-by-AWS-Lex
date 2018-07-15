@@ -266,12 +266,12 @@ class QueuedMessage(object):
                 raise ValueError("Unable to parse expiration date")
         self.body = queued_message.body
         if self.expiration_datetime_in_utc < arrow.utcnow():
-            print "%s < %s:%s" % (self.expiration_datetime_in_utc,
-                                  arrow.utcnow(), True)
+            print(("%s < %s:%s" % (self.expiration_datetime_in_utc,
+                                  arrow.utcnow(), True)))
             self.is_expired = True
         else:
-            print "%s>%s:%s" % (self.expiration_datetime_in_utc,
-                                arrow.utcnow(), False)
+            print(("%s>%s:%s" % (self.expiration_datetime_in_utc,
+                                arrow.utcnow(), False)))
             self.is_expired = False
         self.original_message = kwargs.get("Message", "")
 

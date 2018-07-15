@@ -63,7 +63,7 @@ class Person(object):
 
     def remove_window_location(self, ln):
         self.time_windows.set_list = \
-            filter(lambda w: w.location_name != ln, self.time_windows.set_list)
+            [w for w in self.time_windows.set_list if w.location_name != ln]
 
 
 class PersonManager(object):
@@ -99,16 +99,16 @@ class PersonManager(object):
 
     def convert_to_person(self, db_person):
         p = Person(Name=db_person[PERSON_HASH_KEY])
-        if 'req_phys_confirm' in db_person.keys():
+        if 'req_phys_confirm' in list(db_person.keys()):
             p.require_physical_confirmation = \
                 bool(db_person['req_phys_confirm'])
         else:
             p.require_physical_confirmation = False
 
-        if 'is_muted' in db_person.keys():
+        if 'is_muted' in list(db_person.keys()):
             p.is_muted = db_person['is_muted']
 
-        if 'windows' in db_person.keys():
+        if 'windows' in list(db_person.keys()):
             for w in json.loads(db_person['windows']):
                 tw = PersonTimeWindow(IsMuted=w["is_muted"],
                                       ical=w['ical'],
@@ -174,9 +174,9 @@ class PersonManager(object):
         else:
             for p in resp['Items']:
                 person = {}
-                if 'windows' in p.keys():
+                if 'windows' in list(p.keys()):
                     person['windows'] = p['windows']['S']
-                if 'req_phys_confirm' in p.keys():
+                if 'req_phys_confirm' in list(p.keys()):
                     person['req_phys_confirm'] = p['req_phys_confirm']['BOOL']
                 person['PersonName'] = p['PersonName']['S']
                 people.append(self.convert_to_person(person))

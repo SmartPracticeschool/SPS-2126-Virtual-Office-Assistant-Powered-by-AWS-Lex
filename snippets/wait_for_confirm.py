@@ -12,7 +12,7 @@
 import boto3
 
 sqs = boto3.resource('sqs')
-print 'Waiting for message'
+print('Waiting for message')
 queue = sqs.get_queue_by_name(QueueName='iot-g030jf053446dmd6')
 for message in queue.receive_messages(MessageAttributeNames=['Author']):
-    print message
+    print(message)

@@ -185,17 +185,17 @@ class LocationManager(object):
     def convert_to_loc_avail(self, db_loc):
         la = LocationAvailability()
         la.location_name = db_loc[HASH_KEY]
-        if 'is_muted' in db_loc.keys():
+        if 'is_muted' in list(db_loc.keys()):
             la.is_muted = db_loc['is_muted']
 
-        if 'windows' in db_loc.keys():
+        if 'windows' in list(db_loc.keys()):
             for w in json.loads(db_loc['windows']):
                 tw = TimeWindow(IsMuted=w["is_muted"],
                                 ical=w['ical'],
                                 Priority=w['priority'])
 
                 la.add_window(tw)
-        if 'last_activity' in db_loc.keys():
+        if 'last_activity' in list(db_loc.keys()):
             la.last_activity = arrow.get(db_loc['last_activity'])
             logging.info('Last motion was ' + la.last_activity.isoformat())
             if ((arrow.utcnow()-la.last_activity).seconds > 60):
@@ -203,7 +203,7 @@ class LocationManager(object):
             else:
                 la.is_motion = True
 
-        if 'input_capabilities' in db_loc.keys():
+        if 'input_capabilities' in list(db_loc.keys()):
             for k in json.loads(db_loc['input_capabilities']):
                 i = json.loads(db_loc['input_capabilities'])[k]
                 la.add_input_capability(
@@ -261,7 +261,7 @@ class LocationVerification(object):
                 not hasattr(self.location, 'input_capabilities'):
             return True, 0, 0
 
-        if len(self.location.input_capabilities.keys()) > 0:
+        if len(list(self.location.input_capabilities.keys())) > 0:
             id = kwargs.get('HardwareId')
             speech_method = kwargs.get('SpeechMethod')
 
@@ -269,7 +269,7 @@ class LocationVerification(object):
                 s_id = id
 
             else:
-                s_id = random.choice(self.location.input_capabilities.keys())
+                s_id = random.choice(list(self.location.input_capabilities.keys()))
 
             s = Switch(HardwareId=s_id,
                        TimeoutInSeconds=self.timeout_in_secs)

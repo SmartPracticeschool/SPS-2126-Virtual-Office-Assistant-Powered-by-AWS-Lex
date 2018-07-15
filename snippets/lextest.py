@@ -13,11 +13,11 @@ from babylex import LexSession
 responses = ['nope', 'yes', "he's not here", "yea", "yep", "I am", "yes I am"]
 lex_session = LexSession(bot="PollexyTestBot", alias="$LATEST", user="troy")
 
-print '------------------------------'
-print " Starting bot "
-print '------------------------------'
+print('------------------------------')
+print(" Starting bot ")
+print('------------------------------')
 resp = lex_session.text("Verify location for owen")
-print resp
+print(resp)
 # resp = lex_session.text('yes')
 # print resp
 # quit()
@@ -36,8 +36,8 @@ resp = lex_session.content(ctype=ctype,
 #        print 'Owen is NOT there'
 #    else:
 #        print 'Owen IS there'
-print '------------------'
+print('------------------')
 
-print resp.text
-print resp.content
-print resp.headers
+print((resp.text))
+print((resp.content))
+print((resp.headers))

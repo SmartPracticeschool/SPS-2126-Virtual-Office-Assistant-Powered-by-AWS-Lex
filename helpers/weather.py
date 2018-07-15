@@ -18,9 +18,9 @@ import logging
 class Weather(object):
     def __init__(self, **kwargs):
         c = ConfigHelper().config
-        if 'wunderground_api_key' not in c.keys() or \
-                'weather_state' not in c.keys() or \
-                'weather_city' not in c.keys():
+        if 'wunderground_api_key' not in list(c.keys()) or \
+                'weather_state' not in list(c.keys()) or \
+                'weather_city' not in list(c.keys()):
             logging.warning('Config file missing wunderground_api_key, ' +
                             'weather_state, or weather_city')
             return
@@ -31,7 +31,7 @@ class Weather(object):
         logging.info('Weather state={}, city={}'.format(self.state, self.city))
 
     def get_feel(self, temp):
-        print 'temp is {}'.format(temp)
+        print(('temp is {}'.format(temp)))
         if temp > 80:
             feel = "hot"
             in_clothes = "shorts and a t-shirt"
@@ -57,7 +57,7 @@ class Weather(object):
 
     def get_forecast(self):
         j = self.make_request('forecast')
-        print j
+        print(j)
         t = j["forecast"]["simpleforecast"]["forecastday"][0]
         self.f_high = int(t["high"]['fahrenheit'])
         self.f_low = int(t["low"]['fahrenheit'])

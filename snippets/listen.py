@@ -20,13 +20,13 @@ r = sr.Recognizer()
 def listen():
     with sr.Microphone(sample_rate=44100, chunk_size=512) as source:
         # r.adjust_for_ambient_noice(source)
-        print 'Listening . . .'
+        print('Listening . . .')
         audio = r.listen(source)
-        print 'Done listening. Writing file . . . '
+        print('Done listening. Writing file . . . ')
 
         with open('audio.wav', 'wb') as f:
             f.write(audio.get_wav_data())
-        print 'Playing wav file . . . '
+        print('Playing wav file . . . ')
         pygame.mixer.pre_init(44100, -16, 2, 2048)
         pygame.mixer.init()
         pygame.mixer.music.load('audio.wav')

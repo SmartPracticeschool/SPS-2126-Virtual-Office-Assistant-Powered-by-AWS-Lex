@@ -30,7 +30,7 @@ import json
 import tzlocal
 import uuid
 from dateutil import tz
-from ConfigParser import SafeConfigParser
+from configparser import SafeConfigParser
 from python_terraform import Terraform
 from subprocess import call
 from lex import LexBotManager, LexIntentManager, LexSlotManager, LexPlayer
@@ -54,7 +54,7 @@ def cli(profile, region, verbose):
         os.environ['LOG_LEVEL'] = 'DEBUG'
     os.environ['AWS_PROFILE'] = profile
     if region:
-        print 'region = {}'.format(region)
+        print(('region = {}'.format(region)))
         os.environ['AWS_DEFAULT_REGION'] = region
     pass
 
@@ -98,7 +98,7 @@ def lex_bot():
 def apply_bots(config_path):
     bm = LexBotManager(ConfigPath=config_path)
     bots = bm.load_bots()
-    for k in bots.keys():
+    for k in list(bots.keys()):
         bot = bots[k]
         status, bot = bm.upsert(bot)
         if not status == 'FAILED':
@@ -128,7 +128,7 @@ def lex_slot_type():
 def apply_slots(config_path):
     sm = LexSlotManager(ConfigPath=config_path)
     slots = sm.load()
-    for i in slots.keys():
+    for i in list(slots.keys()):
         slot = slots[i]
         slot = sm.upsert(slot)
         sm.create_version(slot)
@@ -139,7 +139,7 @@ def apply_slots(config_path):
 def apply_intents(config_path):
     im = LexIntentManager(ConfigPath=config_path)
     intents = im.load()
-    for i in intents.keys():
+    for i in list(intents.keys()):
         intent = intents[i]
         intent = im.upsert(intent)
         im.create_version(intent)
@@ -201,7 +201,7 @@ def person_update(name, req_phys_confirmation, no_phys_confirmation,
             RequirePhysicalConfirmation=req_phys,
             Windows=location_windows)
     except Exception as e:
-        print "Error creating user: {}".format(e)
+        print(("Error creating user: {}".format(e)))
 
     click.echo("Upserted user {}".format(name))
 
@@ -226,9 +226,9 @@ def person_availability(person_name):
     locs = p.all_available()
     if len(locs) > 0:
         for l in locs:
-            print l.location_name
+            print((l.location_name))
     else:
-        print "No locations are currently acrive"
+        print("No locations are currently acrive")
 
 
 @person.command('list')
@@ -243,7 +243,7 @@ def person_list():
                        .format(p.name,
                                p.require_physical_confirmation))
             for tw in json.loads(p.time_windows.to_json()):
-                print '--{}\n{}'.format(tw['location_name'], tw['ical'])
+                print(('--{}\n{}'.format(tw['location_name'], tw['ical'])))
 
 
 @person.command('show')
@@ -342,12 +342,12 @@ def list(person_name, include_expired, verbose):
         if not m.person_name == person_name:
             log.debug('Skipping message for {}'.format(m.person_name))
             continue
-        print '\n* {}\n "{}"\n Next: {}\n Expired: {}\n Queued: {}'.format(
+        print(('\n* {}\n "{}"\n Next: {}\n Expired: {}\n Queued: {}'.format(
                 m.uuid_key,
                 m.body,
                 m.next_occurrence_local,
                 bool(m.no_more_occurrences),
-                bool(m.is_queued))
+                bool(m.is_queued))))
 
 
 @message.command('speak')
@@ -379,7 +379,7 @@ def speak(person_name,
             lm = LocationManager()
             loc = lm.get_location(location_name)
             if not ignore_motion and not loc.is_motion:
-                print 'Exiting. No motion detected at ' + location_name
+                print(('Exiting. No motion detected at ' + location_name))
                 exit(1)
             speaker = Speaker(NoAudio=no_audio)
             message_manager = MessageManager(LocationName=location_name)
@@ -402,7 +402,7 @@ def speak(person_name,
                         while (not lp.is_done):
                             lp.get_user_input()
                     except Exception as e:
-                        print 'Bot failed: {}'.format(e)
+                        print(('Bot failed: {}'.format(e)))
                         raise
                 message_manager.succeed_messages(dont_delete=simulate)
 
@@ -449,8 +449,8 @@ def speak(person_name,
 
     except Exception as exc:
         exc_type, exc_value, exc_traceback = sys.exc_info()
-        print repr(traceback.format_exception(exc_type, exc_value,
-                   exc_traceback))
+        print((repr(traceback.format_exception(exc_type, exc_value,
+                   exc_traceback))))
         click.echo("Error: %s" % str(exc))
         exit(2)
 
@@ -520,7 +520,7 @@ def queue(simulate, simulated_date, verbose):
                 click.echo(str(m))
 
     except Exception:
-        print 'here'
+        print('here')
         click.echo(traceback.print_exc())
         raise
 
@@ -559,8 +559,8 @@ def message_schedule(person_name,
                      introduction,
                      end_time):
     try:
-        print ice_breaker
-        print required_bots
+        print(ice_breaker)
+        print(required_bots)
         click.echo("Scheduling message for person {}".format(person_name))
         scheduler = Scheduler()
         if not timezone:
@@ -607,8 +607,8 @@ def message_schedule(person_name,
         click.echo('End Time: {}'.format(end_datetime))
         if ical:
             click.echo('ical:\n{}'.format(ical))
-        print "Next: {}".format(message.next_occurrence_local)
-        print message.to_ical()
+        print(("Next: {}".format(message.next_occurrence_local)))
+        print((message.to_ical()))
 
     except Exception:
         click.echo(traceback.print_exc())
@@ -640,8 +640,8 @@ def teach(no_audio, voice_id):
 
     except Exception as exc:
         exc_type, exc_value, exc_traceback = sys.exc_info()
-        print repr(traceback.format_exception(exc_type, exc_value,
-                   exc_traceback))
+        print((repr(traceback.format_exception(exc_type, exc_value,
+                   exc_traceback))))
         click.echo("Error: %s" % str(exc))
         exit(2)
 
@@ -673,12 +673,12 @@ def message_say(person_name, location_name, message, voice_id):
         if done:
             say(Message=message, VoiceId=voice_id)
         else:
-            print "Can't verify {} at location".format(person_name)
+            print(("Can't verify {} at location".format(person_name)))
 
     except Exception as exc:
         exc_type, exc_value, exc_traceback = sys.exc_info()
-        print repr(traceback.format_exception(exc_type, exc_value,
-                   exc_traceback))
+        print((repr(traceback.format_exception(exc_type, exc_value,
+                   exc_traceback))))
         click.echo("Error: %s" % str(exc))
         exit(2)
 
@@ -706,7 +706,7 @@ def match_face(obj):
         collection = obj.collection
         fm = FaceManager(Bucket='face-db-pollexy')
         response = fm.match_face(Path=path, Collection=collection)
-        print response
+        print(response)
     except Exception as exc:
         click.echo("Error: %s" % str(exc))
         exit(2)
@@ -718,7 +718,7 @@ def update_location_activity(obj):
         location_name = obj.location_name
         lm = LocationManager()
         response = lm.update_location_activity(location_name)
-        print response
+        print(response)
     except Exception as exc:
         click.echo("Error: %s" % str(exc))
         exit(2)
@@ -747,10 +747,10 @@ def deploy():
     parser = SafeConfigParser()
     parser.read(config)
     if not parser.has_section('profile pollexy'):
-        print "You need to run 'pollexy credentials configure'"
+        print("You need to run 'pollexy credentials configure'")
         return
     region = parser.get('profile pollexy', 'region')
-    print 'Deploying to {} . . .'.format(region)
+    print(('Deploying to {} . . .'.format(region)))
     call(["serverless", "deploy", "--region", region])
 
 
@@ -766,20 +766,20 @@ def plan():
     config = os.path.expanduser('~/.aws/config')
     parser.read(config)
     if not parser.has_section('profile pollexy'):
-        print "You need to run 'pollexy credentials configure'"
+        print("You need to run 'pollexy credentials configure'")
         return
     region = parser.get('profile pollexy', 'region')
-    print 'Initializing environment . . . ' + region
+    print(('Initializing environment . . . ' + region))
     code, stdout, stderr = tf.init()
-    print stderr
-    print stdout
+    print(stderr)
+    print(stdout)
 
-    print 'Planning environment . . . '
+    print('Planning environment . . . ')
     code, stdout, stderr = tf.plan(var={'aws_region': region})
     if (stderr):
-        print stderr
+        print(stderr)
     else:
-        print stdout
+        print(stdout)
 
 
 @tf.command()
@@ -789,15 +789,15 @@ def apply():
     config = os.path.expanduser('~/.aws/config')
     parser.read(config)
     if not parser.has_section('profile pollexy'):
-        print "You need to run 'pollexy credentials configure'"
+        print("You need to run 'pollexy credentials configure'")
         return
     region = parser.get('profile pollexy', 'region')
-    print 'Applying environment . . . '
+    print('Applying environment . . . ')
     code, stdout, stderr = tf.apply(var={'aws_region': region})
     if (stderr):
-        print stderr
+        print(stderr)
     else:
-        print stdout
+        print(stdout)
 
 
 @tf.command()
@@ -808,15 +808,15 @@ def destroy():
     config = os.path.expanduser('~/.aws/config')
     parser.read(config)
     if not parser.has_section('profile pollexy'):
-        print "You need to run 'pollexy credentials configure'"
+        print("You need to run 'pollexy credentials configure'")
         return
     region = parser.get('profile pollexy', 'region')
-    print 'Destroying environment . . . '
+    print('Destroying environment . . . ')
     code, stdout, stderr = tf.destroy(var={'aws_region': region})
     if (stderr):
-        print stderr
+        print(stderr)
     else:
-        print stdout
+        print(stdout)
 
 
 @cli.group('credentials')

@@ -16,4 +16,4 @@ with open("../pollexa.yaml", 'r') as stream:
         x=yaml.load(stream)
     except yaml.YAMLError as exc:
         print(exc)
-print x['teaching_phrases']
+print((x['teaching_phrases']))

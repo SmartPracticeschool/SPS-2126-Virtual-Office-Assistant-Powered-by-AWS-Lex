@@ -43,9 +43,9 @@ class LexSlotManager:
 
     def upsert(self, slot):
         args = {}
-        for l in slot.keys():
+        for l in list(slot.keys()):
             args[l] = slot[l]
-        print 'Upserting slot: {}'.format(slot['name'])
+        print(('Upserting slot: {}'.format(slot['name'])))
         current_slot = self.get_slot_type(
             Name=slot['name'],
             Version='$LATEST'
@@ -62,13 +62,13 @@ class LexSlotManager:
         )
         if current_slot:
             current_slot['checksum'] = current_slot['checksum']
-        print 'Creating new version of slot: {}'.format(slot['name'])
+        print(('Creating new version of slot: {}'.format(slot['name'])))
         resp = self.client.create_slot_type_version(
             name=slot['name'],
             checksum=slot['checksum']
         )
         slot['version'] = str(resp['version'])
-        print 'Slot version = {}'.format(slot['version'])
+        print(('Slot version = {}'.format(slot['version'])))
         return slot
 
 
@@ -107,32 +107,32 @@ class LexIntentManager:
         )
         if current_intent:
             current_intent['checksum'] = current_intent['checksum']
-        print 'Creating new version of intent: {}'.format(intent['name'])
+        print(('Creating new version of intent: {}'.format(intent['name'])))
         resp = self.client.create_intent_version(
             name=intent['name'],
             checksum=intent['checksum']
         )
         intent['version'] = str(resp['version'])
-        print 'Intent version = {}'.format(intent['version'])
+        print(('Intent version = {}'.format(intent['version'])))
         return intent
 
     def upsert(self, intent):
         args = {}
-        for l in intent.keys():
+        for l in list(intent.keys()):
             args[l] = intent[l]
-            if 'slots' in intent.keys():
+            if 'slots' in list(intent.keys()):
                 for i in intent['slots']:
-                    if 'slotTypeVersion' in i.keys() and \
+                    if 'slotTypeVersion' in list(i.keys()) and \
                             i['slotTypeVersion'] == '$LATEST':
-                        print 'Getting slot versions for ' + i['name']
+                        print(('Getting slot versions for ' + i['name']))
                         slots = self.client.get_slot_type_versions(
                             name=i['slotType'], maxResults=50)['slotTypes']
                         if len(slots) > 0:
                             latestVersion = slots[len(slots)-1]['version']
-                            print 'Latest slot version = {}' \
-                                .format(latestVersion)
+                            print(('Latest slot version = {}' \
+                                .format(latestVersion)))
                             i['slotTypeVersion'] = latestVersion
-        print 'Upserting intent: {}'.format(intent['name'])
+        print(('Upserting intent: {}'.format(intent['name'])))
         current_intent = self.get_intent(
             intent['name'],
             '$LATEST'
@@ -151,13 +151,13 @@ class LexBotManager:
 
     def get_alias(self, botName, aliasName):
         try:
-            print 'get_alias {}:{}'.format(botName, aliasName)
+            print(('get_alias {}:{}'.format(botName, aliasName)))
             resp = self.client.get_bot_alias(
                 name=aliasName,
                 botName=botName
             )
             if resp:
-                print 'get_alias checksum = {}'.format(resp['checksum'])
+                print(('get_alias checksum = {}'.format(resp['checksum'])))
                 return resp
         except ClientError as e:
             if e.response and \
@@ -169,7 +169,7 @@ class LexBotManager:
     def get_bot(self, **kwargs):
         self.name = kwargs.get('Name')
         self.versionOrAlias = kwargs.get('VersionOrAlias', '$LATEST')
-        print 'Getting bot {}:{}'.format(self.name, self.versionOrAlias)
+        print(('Getting bot {}:{}'.format(self.name, self.versionOrAlias)))
         try:
             client = boto3.client('lex-models')
             resp = client.get_bot(
@@ -177,7 +177,7 @@ class LexBotManager:
                 versionOrAlias=self.versionOrAlias
             )
             if resp:
-                print 'get_bot checksum = {}'.format(resp['checksum'])
+                print(('get_bot checksum = {}'.format(resp['checksum'])))
                 return resp
         except ClientError as e:
             if e.response and \
@@ -199,18 +199,18 @@ class LexBotManager:
 
     def upsert(self, bot):
         args = {}
-        for l in bot.keys():
+        for l in list(bot.keys()):
             args[l] = bot[l]
         for i in bot['intents']:
             if i['intentVersion'] == '$LATEST':
-                print i['intentVersion']
+                print((i['intentVersion']))
                 intents = self.client.get_intent_versions(
                     name=i['intentName'], maxResults=50)['intents']
                 if len(intents) > 0:
                     latestVersion = intents[len(intents)-1]['version']
-                    print 'Latest intent version = {}'.format(latestVersion)
+                    print(('Latest intent version = {}'.format(latestVersion)))
                     i['intentVersion'] = latestVersion
-        print 'Creating bot: {}'.format(bot['name'])
+        print(('Creating bot: {}'.format(bot['name'])))
         current_bot = self.get_bot(
             Name=bot['name']
         )
@@ -218,10 +218,10 @@ class LexBotManager:
             args['checksum'] = current_bot['checksum']
         resp = self.client.put_bot(**args)
         while resp['status'] == 'BUILDING':
-            print 'Bot is building . . .'
+            print('Bot is building . . .')
             time.sleep(10)
             resp = self.get_bot(Name=bot['name'])
-        print 'Status: {}'.format(resp['status'])
+        print(('Status: {}'.format(resp['status'])))
         if resp['status'] == 'FAILED':
             pprint.pprint(resp)
         return resp['status'], bot
@@ -232,28 +232,28 @@ class LexBotManager:
         )
         if current_bot:
             bot['checksum'] = current_bot['checksum']
-        print 'Creating new version'
+        print('Creating new version')
         resp = self.client.create_bot_version(
             name=bot['name'],
             checksum=bot['checksum']
         )
         bot['version'] = str(resp['version'])
-        print 'Version = {}'.format(bot['version'])
+        print(('Version = {}'.format(bot['version'])))
         time.sleep(2)
         return bot
 
     def update_alias(self, bot, **kwargs):
         alias = kwargs.get('Alias', 'LATEST')
-        print 'Updating alias {} for bot {}:{}' \
-              .format(alias, bot['name'], bot['version'])
+        print(('Updating alias {} for bot {}:{}' \
+              .format(alias, bot['name'], bot['version'])))
         current_bot = self.get_alias(bot['name'], alias)
         resp = {}
         if current_bot:
-            print 'Alias exists . . . updating.'
-            print 'name={}, version={}, checksum={}' \
+            print('Alias exists . . . updating.')
+            print(('name={}, version={}, checksum={}' \
                   .format(alias,
                           current_bot['botVersion'],
-                          current_bot['checksum'])
+                          current_bot['checksum'])))
             resp = self.client.put_bot_alias(
                 checksum=current_bot['checksum'],
                 name=alias,
@@ -261,7 +261,7 @@ class LexBotManager:
                 botVersion=current_bot['botVersion']
             )
         else:
-            print 'Alias does NOT exist . . . creating.'
+            print('Alias does NOT exist . . . creating.')
             try:
                 resp = self.client.put_bot_alias(
                    name=alias,
@@ -270,28 +270,28 @@ class LexBotManager:
                 )
             except Exception as e:
                 pprint.pprint(e)
-                print "Error creating bot: {}".format(resp)
-        print 'Alias updated'
+                print(("Error creating bot: {}".format(resp)))
+        print('Alias updated')
 
     def delete_bot(self, **kwargs):
         bot_name = kwargs.get('Name')
         aliases = self.client.get_bot_aliases(
             botName=bot_name)
         for a in aliases['BotAliases']:
-            print 'Deleting {}:{}'.format(bot_name, a)
+            print(('Deleting {}:{}'.format(bot_name, a)))
             pprint.pprint(a)
             self.client.delete_bot_alias(
                 botName=bot_name,
                 name=a['name'])
             time.sleep(2)
-        print 'Deleting {}'.format(bot_name)
+        print(('Deleting {}'.format(bot_name)))
         try:
             self.client.delete_bot(name=bot_name)
-            print 'Deleted bot'
+            print('Deleted bot')
         except ClientError as e:
             if e.response and \
                e.response['Error']['Code'] == 'NotFoundException':
-                print "Bot doesn't exist: {}".format(bot_name)
+                print(("Bot doesn't exist: {}".format(bot_name)))
             else:
                 raise
 
@@ -319,12 +319,12 @@ class LexBot(object):
                            fromlist=["*"])
             self.bot = getattr(m, self.bot_name)(self)
         except Exception as e:
-            print "Error loading {} bot plugin".format(self.bot_name)
-            print e
+            print(("Error loading {} bot plugin".format(self.bot_name)))
+            print(e)
             m = __import__('lex.bots', fromlist=["BaseBot"])
-            print m
+            print(m)
             self.bot = getattr(m, 'BaseBot')()
-            print self.bot
+            print((self.bot))
         self.bot.register()
 
     def send_response(self, data, **kwargs):
@@ -361,23 +361,23 @@ class LexBot(object):
     @property
     def slots(self):
         if self.last_response and \
-                'slots' in self.last_response.keys():
+                'slots' in list(self.last_response.keys()):
                     return self.last_response['slots']
 
     @property
     def resp_meta(self):
         if self.last_response and \
-                'ResponseMetadata' in self.last_response.keys():
+                'ResponseMetadata' in list(self.last_response.keys()):
                     return self.last_response['ResponseMetadata']
 
     @property
     def needs_slot(self):
-        return 'dialogState' in self.last_response.keys() and \
+        return 'dialogState' in list(self.last_response.keys()) and \
                 self.last_response['dialogState'] == 'ElicitSlot'
 
     @property
     def needs_intent(self):
-        return 'dialogState' in self.last_response.keys() and \
+        return 'dialogState' in list(self.last_response.keys()) and \
                 self.last_response['dialogState'] == 'ElicitIntent'
 
     @property
@@ -385,7 +385,7 @@ class LexBot(object):
         if self.no_audio:
             return self.text_response
         elif self.last_response and \
-                'inputTranscript' in self.last_response.keys():
+                'inputTranscript' in list(self.last_response.keys()):
                     return self.last_response['inputTranscript']
 
     @property
@@ -402,12 +402,12 @@ class LexBot(object):
 
     @property
     def last_state(self):
-        if self.last_response and 'dialogState' in self.last_response.keys():
+        if self.last_response and 'dialogState' in list(self.last_response.keys()):
             return self.last_response['dialogState']
 
     @property
     def last_intent(self):
-        if self.last_response and 'intentName' in self.last_response.keys():
+        if self.last_response and 'intentName' in list(self.last_response.keys()):
             return self.last_response['intentName']
 
     def get_user_input(self):
@@ -422,7 +422,7 @@ class LexBot(object):
                 self.send_response(self.ice_breaker)
             self.log.debug('Disabling restart flag')
             self.restart = False
-        elif self.last_response and 'message' in self.last_response.keys():
+        elif self.last_response and 'message' in list(self.last_response.keys()):
             message = self.last_response['message']
             self.log.debug('Bot is running: {}'.format(message))
         elif self.last_response and \
@@ -431,7 +431,7 @@ class LexBot(object):
             message = "Something is wrong."
         self.output(Message=message)
         if self.no_audio:
-            self.text_response = raw_input('> ')
+            self.text_response = eval(input('> '))
             self.log.debug('Sending: {}'.format(self.text_response))
             self.send_response(self.text_response)
         else:
@@ -445,9 +445,9 @@ class LexBot(object):
         with sr.Microphone(device_index=1,
                            sample_rate=16000, chunk_size=512) as source:
             # r.adjust_for_ambient_noice(source)
-            print 'Listening . . .'
+            print('Listening . . .')
             audio = r.listen(source)
-            print 'Done listening. Processing . . .'
+            print('Done listening. Processing . . .')
             filename = os.path.join('/tmp', str(uuid.uuid4()))
             with open(filename, 'wb') as f:
                 f.write(audio.get_wav_data())
@@ -462,7 +462,7 @@ class LexBot(object):
 
     def write(self, **kwargs):
         msg = kwargs.get('Message')
-        print '{}\n'.format(msg)
+        print(('{}\n'.format(msg)))
 
     def speak(self, **kwargs):
         msg = kwargs.get('Message')
@@ -558,7 +558,7 @@ class LexPlayer(object):
             return None
         if self.last_state == 'ReadyForFulfillment':
             return False
-        return 'message' in self.last_response.keys() and \
+        return 'message' in list(self.last_response.keys()) and \
             self.last_response['message'] == "OK, we'll chat later." and \
             self.last_intent == 'PollexyAnythingElseIntent'
 

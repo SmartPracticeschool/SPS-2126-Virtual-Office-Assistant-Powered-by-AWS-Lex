@@ -22,4 +22,4 @@ class BaseBot(object):
         pass
 
     def register(self):
-        print "{}: Bot Registered Successfully".format(self.bot_name)
+        print(("{}: Bot Registered Successfully".format(self.bot_name)))

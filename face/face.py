@@ -38,7 +38,7 @@ class FaceManager(object):
             s3.meta.client.head_bucket(Bucket=bucket)
             return True
         except ClientError as exc:
-            print str(exc)
+            print((str(exc)))
             return False
 
     def get_file_data(self, path):
@@ -80,13 +80,13 @@ class FaceManager(object):
                     'Bytes': image.read()
                 }
             )
-        print response
+        print(response)
 
     def upload_face(self, **kwargs):
         error_if_missing(kwargs, ['Path', 'Collection', 'Person'])
         if 'RekognitionStub' in kwargs:
             reko = kwargs.get('RekognitionStub')
-            print "Faking out a Rekognition"
+            print("Faking out a Rekognition")
         else:
             reko = boto3.client('rekognition')
 

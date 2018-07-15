@@ -11,7 +11,7 @@
 
 """interacts with the message queue, reading and publishing messages"""
 import boto3
-from message import QueuedMessage
+from .message import QueuedMessage
 from scheduler.scheduler import Scheduler
 import logging
 from person.person import PersonManager
@@ -330,7 +330,7 @@ class LibraryManager(object):
                 }
             )
 
-        if 'Item' not in resp.keys():
+        if 'Item' not in list(resp.keys()):
             return None
 
         return(resp['Item'])

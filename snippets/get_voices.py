@@ -14,4 +14,4 @@ polly = boto3.client('polly')
 voices = []
 for l in ['en-AU', 'en-GB', 'en-GB-WLS', 'en-IN', 'en-US']:
     for v in polly.describe_voices(LanguageCode=l)['Voices']:
-        print l, v['Name']
+        print((l, v['Name']))

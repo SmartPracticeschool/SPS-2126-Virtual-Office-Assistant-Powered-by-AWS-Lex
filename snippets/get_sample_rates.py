@@ -19,7 +19,7 @@ for fs in samplerates:
     try:
         sd.check_input_settings(device=device, samplerate=fs)
     except Exception as e:
-        print(fs, e)
+        print((fs, e))
     else:
         supported_samplerates.append(fs)
 print(supported_samplerates)

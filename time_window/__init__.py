@@ -31,15 +31,15 @@ class TimeWindowSet(object):
 
     def is_available(self, dt):
         is_avail = False
-        print "Checking if window is current with " + dt.isoformat()
+        print(("Checking if window is current with " + dt.isoformat()))
         for tw in self.set_list:
-            print 'is it muted? ' + str(tw.is_muted)
-            print "is in window " + str(tw.is_in_window(dt))
+            print(('is it muted? ' + str(tw.is_muted)))
+            print(("is in window " + str(tw.is_in_window(dt))))
             if tw.is_muted and tw.is_in_window(dt):
-                print "NOT AVAILABLE"
+                print("NOT AVAILABLE")
                 return False
             if tw.is_in_window(dt):
-                print "AVAILABLE"
+                print("AVAILABLE")
                 is_avail = True
         return is_avail
 

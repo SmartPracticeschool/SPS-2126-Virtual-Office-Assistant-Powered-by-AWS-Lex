@@ -12,9 +12,9 @@
 import boto3
 import pprint
 client = boto3.client('lex-runtime')
-print '------------------------------'
-print " Starting bot "
-print '------------------------------'
+print('------------------------------')
+print(" Starting bot ")
+print('------------------------------')
 resp = client.post_text(botName='PollexyTestBot',
                         botAlias='Latest',
                         userId='tester',
@@ -26,11 +26,11 @@ while not done:
         done = True
 
     elif resp['dialogState'] == 'ElicitSlot':
-        answer = raw_input(resp['message'])
+        answer = eval(input(resp['message']))
 
     else:
-        print resp['dialogState']
-        print resp
+        print((resp['dialogState']))
+        print(resp)
 
     pprint.pprint(resp)
     if not done:
@@ -38,10 +38,10 @@ while not done:
                                           botAlias='LATEST',
                                           userId='tester',
                                           inputText=answer)
-        print emergency_resp
+        print(emergency_resp)
 
         resp = client.post_text(botName='PollexyTestBot',
                                 botAlias='LATEST',
                                 userId='tester',
                                 inputText=answer)
-        print resp
+        print(resp)

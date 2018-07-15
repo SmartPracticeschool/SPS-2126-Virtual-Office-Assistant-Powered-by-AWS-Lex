@@ -250,7 +250,7 @@ def test_setting_local_button_sets_local_button():
     l.with_switch(Color='Red',
                   Name='Test',
                   Style='Circle')
-    assert len(l.input_capabilities.keys()) == 1
+    assert len(list(l.input_capabilities.keys())) == 1
 
 
 @mock_dynamodb2
@@ -294,14 +294,14 @@ def test_updating_existing_switch_does_not_add_new_switch():
                   Color='Red',
                   Name='Test',
                   Style='Circle')
-    assert id in l.input_capabilities.keys() and \
+    assert id in list(l.input_capabilities.keys()) and \
         l.input_capabilities[id]['style'] == 'Circle'
 
     l.with_switch(HardwareId=id,
                   Color='Red',
                   Name='Test',
                   Style='Square')
-    assert len(l.input_capabilities.keys()) == 1 and \
+    assert len(list(l.input_capabilities.keys())) == 1 and \
         l.input_capabilities[id]['style'] == 'Square'
 
 
@@ -358,7 +358,7 @@ def test_saving_switch_saves_id():
     lm = LocationManager()
     lm.update_input_capabilities(l)
     loc = lm.get_location('kitchen')
-    assert id in loc.input_capabilities.keys()
+    assert id in list(loc.input_capabilities.keys())
 
 
 @patch('babylex.LexSession.text')
@@ -449,7 +449,7 @@ def test_verify_switch_with_press_returns_true():
                               PersonName='calvin')
 
     done, count, timeout = lv.verify_person_at_location()
-    print done, count, timeout
+    print((done, count, timeout))
     assert done and count == 1 and timeout < 3
 
 

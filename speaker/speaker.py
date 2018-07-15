@@ -62,10 +62,10 @@ class Speaker(object):
         include_chime = kwargs.get('IncludeChime', False)
         chime = kwargs.pop("Chime", "three_tone_chime")
         if not self.is_audio_ready:
-            print "Nothing to say . . . call generate_audio() first"
+            print("Nothing to say . . . call generate_audio() first")
             return
         if self.no_audio:
-            print "No audio . . . speech would be:\n%s" % self.message
+            print(("No audio . . . speech would be:\n%s" % self.message))
             return "audio: %s"
         else:
             audio_file_to_play = kwargs.pop("AudioFilePath",

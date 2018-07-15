@@ -9,7 +9,7 @@ class PollexyHygieneBot(BaseBot):
         super(PollexyHygieneBot, self).__init__()
 
     def on_fulfilled(self):
-        print self.lexbot.last_intent
+        print((self.lexbot.last_intent))
         if self.lexbot.last_intent == 'PollexyBrushTeethIntent':
             self.lexbot.output(
                 Message="Great! Let's go! Pick up your toothbrush." +

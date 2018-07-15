@@ -35,7 +35,7 @@ class TestMessageManager(unittest.TestCase):
     def test_throw_value_error_on_missing_device_name(self):
         with self.assertRaises(Exception) as context:
             MessageManager()
-        print context.exception
+        print((context.exception))
         self.assertTrue('Missing device name' in context.exception)
 
     @mock_sqs

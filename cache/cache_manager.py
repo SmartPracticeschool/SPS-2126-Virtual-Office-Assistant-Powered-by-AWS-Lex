@@ -63,7 +63,7 @@ class CacheManager(object):
                 logging.info(local_file)
                 if not os.path.exists(local_file):
                     logging.info("...Syncing  %s" % local_file)
-                    print "Syncing cache: %s" % local_file
+                    print(("Syncing cache: %s" % local_file))
                     client.download_file(self.bucket_name,
                                          file["Key"],
                                          local_file)
@@ -76,7 +76,7 @@ class CacheManager(object):
         logging.info("Syncing %s/%s" % (self.bucket_name, self.cache_name))
         objects = client.list_objects(Bucket=self.bucket_name,
                                       Prefix="%s/" % self.cache_name)
-        if "Contents" not in objects.keys():
+        if "Contents" not in list(objects.keys()):
             raise StopIteration
         for result in objects["Contents"]:
             yield result

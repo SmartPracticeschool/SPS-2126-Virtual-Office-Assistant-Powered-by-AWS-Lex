@@ -1,7 +1,7 @@
 import pprint
 class Test():
     def ThisWorks(self):
-        print 'THIS WORKED!'
+        print('THIS WORKED!')
 
     def loadModules(self):
         import os
