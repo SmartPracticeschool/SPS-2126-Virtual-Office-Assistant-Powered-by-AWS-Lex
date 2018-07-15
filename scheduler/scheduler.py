@@ -59,20 +59,23 @@ class Scheduler(object):
         dynamodb = boto3.resource('dynamodb')
         table = dynamodb.Table(MESSAGE_SCHEDULE_DB)
         logging.info('Storing message in ' + MESSAGE_SCHEDULE_DB)
-        table.put_item(
-           Item={
-               'uuid': scheduled_message.uuid_key,
-               'create_time': datetime_in_utc,
-               'ical': ical,
-               'bot_names': scheduled_message.bot_names,
-               'required_bots': scheduled_message.required_bots,
-               'ice_breaker': scheduled_message.ice_breaker,
-               'person_name': person_name,
-               'start_datetime_in_utc': start_datetime_in_utc,
-               'end_datetime_in_utc': end_datetime_in_utc,
-               'body': body
-            }
-        )
+        item = {
+            'uuid': scheduled_message.uuid_key,
+            'create_time': datetime_in_utc,
+            'ical': ical,
+            'person_name': person_name,
+            'start_datetime_in_utc': start_datetime_in_utc,
+            'end_datetime_in_utc': end_datetime_in_utc,
+            'body': body
+        }
+        if scheduled_message.bot_names:
+            item['bot_names'] = scheduled_message.bot_names
+        if scheduled_message.required_bots:
+            item['required_bots'] = scheduled_message.required_bots
+        if scheduled_message.ice_breaker:
+            item['ice_breaker'] = scheduled_message.ice_breaker
+
+        table.put_item(Item=item)
 
     def get_messages(self, compare_date='', ready_only=True, **kwargs):
         include_expired = kwargs.get('IncludeExpired', False)

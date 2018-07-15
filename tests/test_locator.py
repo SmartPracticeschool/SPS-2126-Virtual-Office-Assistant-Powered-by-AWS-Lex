@@ -5,8 +5,8 @@
 # License is located at:
 #    http://aws.amazon.com/asl/
 # or in the "license" file accompanying this file. This file is distributed
-# on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, expressi
-# or implied. See the License for the specific language governing permissions 
+# on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, express
+# or implied. See the License for the specific language governing permissions
 # and limitations under the License.
 
 import arrow
@@ -14,6 +14,9 @@ from moto import mock_dynamodb2
 from person.person import Person, PersonManager
 import pytest
 from mock import patch, MagicMock
+from locator.locator import LocationAvailability, TimeWindow
+from locator.locator import LocationStatus, LocationManager, \
+    LocationVerification
 
 rpi_mock = MagicMock()
 modules = {
@@ -24,9 +27,6 @@ modules = {
 patcher = patch.dict("sys.modules", modules)
 patcher.start()
 
-from locator.locator import LocationAvailability, TimeWindow
-from locator.locator import LocationStatus, LocationManager, \
-    LocationVerification
 
 ical_event_night = """
 BEGIN:VEVENT

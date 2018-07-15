@@ -168,8 +168,9 @@ class ScheduledMessage(object):
         if (not self.last_occurrence_in_utc):
             next_occur = self.start_datetime_in_utc.datetime
             next_expire = arrow.get(next_occur).replace(minutes=+10)
-            if self.end_datetime_in_utc < next_expire:
-                next_expire = self.end_datetime_in_utc
+            if self.end_datetime_in_utc and \
+                    self.end_datetime_in_utc < next_expire:
+                    next_expire = self.end_datetime_in_utc
             return next_occur, next_expire
         else:
             start = self.start_datetime_in_utc.datetime
@@ -267,11 +268,11 @@ class QueuedMessage(object):
         self.body = queued_message.body
         if self.expiration_datetime_in_utc < arrow.utcnow():
             print(("%s < %s:%s" % (self.expiration_datetime_in_utc,
-                                  arrow.utcnow(), True)))
+                                   arrow.utcnow(), True)))
             self.is_expired = True
         else:
             print(("%s>%s:%s" % (self.expiration_datetime_in_utc,
-                                arrow.utcnow(), False)))
+                                 arrow.utcnow(), False)))
             self.is_expired = False
         self.original_message = kwargs.get("Message", "")
 

@@ -385,7 +385,7 @@ def test_passing_startdate_adds_to_ical():
             StartDateTimeInUtc=start_date,
             Body="Test",
             PersonName="test")
-    assert ical == m.to_ical()
+    assert ical == m.to_ical().decode('utf-8')
 
 
 @mock_dynamodb2
@@ -401,7 +401,7 @@ def test_passing_frequency_adds_to_ical():
             Body="Test",
             Frequency='HOURLY',
             PersonName="test")
-    assert ical == m.to_ical()
+    assert ical == m.to_ical().decode('utf-8')
 
 
 @mock_dynamodb2
@@ -420,7 +420,7 @@ def test_passing_enddate_adds_to_ical():
             Body="Test",
             Frequency='HOURLY',
             PersonName="test")
-    assert ical == m.to_ical()
+    assert ical == m.to_ical().decode('utf-8')
 
 
 @mock_dynamodb2
@@ -440,7 +440,7 @@ def test_passing_count_adds_to_ical():
             Body="Test",
             Frequency='HOURLY',
             PersonName="test")
-    assert ical == m.to_ical()
+    assert ical == m.to_ical().decode('utf-8')
 
 
 @mock_dynamodb2
@@ -461,4 +461,4 @@ def test_passing_interval_adds_to_ical():
             Frequency='HOURLY',
             Interval=5,
             PersonName="test")
-    assert ical == m.to_ical()
+    assert ical == m.to_ical().decode('utf-8')

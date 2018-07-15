@@ -6,10 +6,11 @@
 #    http://aws.amazon.com/asl/
 # or in the "license" file accompanying this file. This file is distributed
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, expressi
-# or implied. See the License for the specific language governing permissions 
+# or implied. See the License for the specific language governing permissions
 # and limitations under the License.
 
 import arrow
+import boto3
 from moto import mock_dynamodb2
 from person.person import Person, PersonTimeWindow, PersonManager
 
@@ -36,6 +37,28 @@ DURATION:PT1H
 RRULE:FREQ=DAILY
 END:VEVENT
 """
+
+
+def create_person_table():
+    client = boto3.client('dynamodb')
+    client.create_table(
+        AttributeDefinitions=[
+            {
+                'AttributeName': 'PersonName',
+                'AttributeType': 'S'
+            },
+        ],
+        TableName='PollexyPeople',
+        KeySchema=[
+            {
+                'AttributeName': 'PersonName',
+                'KeyType': 'HASH'
+            }],
+        ProvisionedThroughput={
+            'ReadCapacityUnits': 123,
+            'WriteCapacityUnits': 123
+        },
+    )
 
 
 def test_create_person_with_name_sets_name():
@@ -67,7 +90,9 @@ def test_previous_start_returns_correct_value():
     assert start == arrow.get('2013-12-31 07:12:00-05:00')
 
 
+@mock_dynamodb2
 def test_add_multiple_returns_correct_number():
+    create_person_table()
     p = Person(Name='calvin')
     now_dt = arrow.get('2014-01-01T09:09:00.000-05:00')
     tw = PersonTimeWindow(LocationName='kitchen', Priority=100,
@@ -81,6 +106,7 @@ def test_add_multiple_returns_correct_number():
 
 @mock_dynamodb2
 def test_mute_person_mutes_person():
+    create_person_table()
     pm = PersonManager()
     pm.toggle_mute('calvin', True)
     p = pm.get_person('calvin')
@@ -89,6 +115,7 @@ def test_mute_person_mutes_person():
 
 @mock_dynamodb2
 def test_unmute_person_unmutes_person():
+    create_person_table()
     pm = PersonManager()
     pm.toggle_mute('calvin', True)
     p = pm.get_person('calvin')
@@ -100,6 +127,7 @@ def test_unmute_person_unmutes_person():
 
 @mock_dynamodb2
 def test_saving_person_window_set_saves_set():
+    create_person_table()
     pm = PersonManager()
     p = Person(Name='calvin')
     now_dt = arrow.get('2014-01-01T09:09:00.000-05:00')
@@ -117,6 +145,7 @@ def test_saving_person_window_set_saves_set():
 
 @mock_dynamodb2
 def test_saving_person_with_available_windows_are_available():
+    create_person_table()
     now_dt = arrow.get('2014-01-01T09:09:00.000-05:00')
     pm = PersonManager()
     p = Person(Name='calvin')
@@ -134,6 +163,7 @@ def test_saving_person_with_available_windows_are_available():
 
 @mock_dynamodb2
 def test_preference_is_sorted_correctly():
+    create_person_table()
     pm = PersonManager()
     p = Person(Name='calvin')
     now_dt = arrow.get('2014-01-01T07:10:00.000-05:00')
@@ -161,6 +191,7 @@ def test_preference_is_sorted_correctly():
 
 @mock_dynamodb2
 def test_can_save_physical_confirmation_true_preference():
+    create_person_table()
     pm = PersonManager()
     p = Person(Name='calvin')
     p.require_physical_confirmation = True
@@ -171,6 +202,7 @@ def test_can_save_physical_confirmation_true_preference():
 
 @mock_dynamodb2
 def test_can_save_physical_confirmation_false_preference():
+    create_person_table()
     pm = PersonManager()
     p = Person(Name='calvin')
     p.require_physical_confirmation = False
