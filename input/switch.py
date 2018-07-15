@@ -6,7 +6,7 @@
 #    http://aws.amazon.com/asl/
 # or in the "license" file accompanying this file. This file is distributed
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, expressi
-# or implied. See the License for the specific language governing permissions 
+# or implied. See the License for the specific language governing permissions
 # and limitations under the License.
 
 #import RPi.GPIO as GPIO
@@ -25,11 +25,11 @@ class Switch(object):
         GPIO.setup(self.id, GPIO.IN, pull_up_down=GPIO.PUD_UP)
         start = arrow.utcnow()
         done = False
-	print(('waiting for input on ' + str(self.id)))
+        print(('waiting for input on ' + str(self.id)))
         while not done and \
                 (arrow.utcnow() - start).seconds < self.timeout_in_secs:
             input_state = GPIO.input(self.id)
-	    print(input_state)
+            print(input_state)
             if input_state == 0:
                 done = True
             time.sleep(0.1)
