@@ -269,7 +269,7 @@ class LocationVerification(object):
                 s_id = id
 
             else:
-                s_id = random.choice(list(self.location.input_capabilities.keys()))
+                s_id = random.choice(list(self.location.input_capabilities.keys()))  # noqa:E501
 
             s = Switch(HardwareId=s_id,
                        TimeoutInSeconds=self.timeout_in_secs)
@@ -279,9 +279,10 @@ class LocationVerification(object):
             while c < self.retry_count and not done:
                 c = c + 1
                 i_name = self.location.input_capabilities[s_id]['name']
-                speech_method(Message='Please push the {}'.format(i_name),
-                              IncludeChime=True,
-                              VoiceId=self.voice)
+                if speech_method:
+                    speech_method(Message='Please push the {}'.format(i_name),
+                                  IncludeChime=True,
+                                  VoiceId=self.voice)
                 done, timeout = s.wait_for_input()
 
             return done, c, timeout
