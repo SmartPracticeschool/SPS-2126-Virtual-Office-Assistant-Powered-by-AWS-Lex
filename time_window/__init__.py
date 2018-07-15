@@ -13,6 +13,8 @@ from icalendar import Calendar
 from dateutil.rrule import rrulestr
 import arrow
 import json
+import sys
+import traceback
 from helpers.datetime_helpers import check_if_timezone_naive
 
 LOCATION_TABLE = 'locations'
@@ -73,10 +75,11 @@ class TimeWindow(object):
             start = arrow.get(ev.get('dtstart').dt)
             self.delta = ev.get('duration').dt
             check_if_timezone_naive(start, 'start')
-            self.rule = rrulestr(ev.get('rrule').to_ical(),
+            self.rule = rrulestr(ev.get('rrule').to_ical().decode('utf-8'),
                                  dtstart=start.datetime)
         except Exception as ex:
-            raise ValueError("Error processing ical: %s" % str(ex))
+            traceback.print_exc(file=sys.stdout)
+            raise ValueError("Error processing ical: %s" % str(sys.exc_info()))
 
     def previous_start(self, dt=None):
         if not dt and self.compare_dt:
