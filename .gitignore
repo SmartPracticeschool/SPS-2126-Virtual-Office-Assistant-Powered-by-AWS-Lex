@@ -93,3 +93,5 @@ ENV/
 
 *.tfstate*
 .terraform/
+.pytest_cache/
+
