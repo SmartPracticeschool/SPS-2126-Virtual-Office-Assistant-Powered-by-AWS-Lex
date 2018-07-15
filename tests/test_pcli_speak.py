@@ -6,11 +6,11 @@
 #    http://aws.amazon.com/asl/
 # or in the "license" file accompanying this file. This file is distributed
 # on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, expressi
-# or implied. See the License for the specific language governing permissions 
+# or implied. See the License for the specific language governing permissions
 # and limitations under the License.
 
 from click.testing import CliRunner
-from joshua.jcl import cli
+from cli.pollexy import cli
 from mock import patch
 from moto import mock_sqs, mock_dynamodb2
 from messages.message_manager import MessageManager
